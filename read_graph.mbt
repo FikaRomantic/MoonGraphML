@@ -5,11 +5,12 @@ priv struct ParseBudget {
   mut nodes : Int
   mut edges : Int
   mut ports : Int
+  mut endpoints : Int
 }
 
 ///|
 fn ParseBudget::new(limits : Limits) -> ParseBudget {
-  { limits, graphs: 0, nodes: 0, edges: 0, ports: 0, }
+  { limits, graphs: 0, nodes: 0, edges: 0, ports: 0, endpoints: 0, }
 }
 
 ///|
@@ -153,6 +154,7 @@ fn read_graph(
       "data" => graph.data.push(read_datum(child, keys))
       "node" => graph.nodes.push(read_node(child, keys, budget))
       "edge" => graph.edges.push(read_edge(child, keys, budget))
+      "hyperedge" => graph.hyperedges.push(read_hyperedge(child, keys, budget))
       _ => raise Unsupported(path="graph", feature=child.name)
     }
   }
