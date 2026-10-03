@@ -1,9 +1,35 @@
 ///|
 fn main {
   let args = @env.args()
-  if args.length() != 3 || (args[1] != "roundtrip" && args[1] != "inspect") {
-    println("usage: graphml roundtrip|inspect INPUT.graphml")
+  if args.length() != 3 ||
+    (
+      args[1] != "roundtrip" &&
+      args[1] != "inspect" &&
+      args[1] != "generate" &&
+      args[1] != "verify"
+    ) {
+    println(
+      "usage: graphml roundtrip|inspect|verify INPUT.graphml OR graphml generate SEED",
+    )
     @sys.exit(2)
+    return
+  }
+  if args[1] == "generate" {
+    let seed = @string.parse_int(args[2]) catch {
+      _ => {
+        println("ERROR: seed must be an integer")
+        @sys.exit(2)
+        return
+      }
+    }
+    let output = generate(seed) catch {
+      error => {
+        println("ERROR: \{error.message()}")
+        @sys.exit(1)
+        return
+      }
+    }
+    println(output)
     return
   }
   let input = @fs.read_file_to_string(args[2]) catch {
@@ -21,7 +47,7 @@ fn main {
       return
     }
   }
-  if args[1] == "roundtrip" {
+  if args[1] == "roundtrip" || args[1] == "verify" {
     let output = @gml.serialize(document) catch {
       error => {
         println("ERROR: \{error.message()}")
@@ -29,7 +55,23 @@ fn main {
         return
       }
     }
-    println(output)
+    if args[1] == "verify" {
+      let recovered = @gml.parse(output) catch {
+        error => {
+          println("ERROR: \{error.message()}")
+          @sys.exit(1)
+          return
+        }
+      }
+      if !document.equivalent(recovered) {
+        println("ERROR: model changed during roundtrip")
+        @sys.exit(1)
+        return
+      }
+      println("OK: model-equivalent roundtrip")
+    } else {
+      println(output)
+    }
   } else {
     let stats = document.statistics()
     println(
