@@ -56,8 +56,9 @@ pub(all) struct Key {
   scope : Scope
   name : String?
   value_type : ValueType?
-  default_value : Scalar?
+  default_value : DataValue?
   description : String?
+  extra : Array[XmlAttributeValue]
 }
 
 ///|
@@ -77,7 +78,15 @@ pub fn Key::new(
       "type does not match key",
     )
   }
-  { id, scope, name, value_type: Some(value_type), default_value, description, }
+  {
+    id,
+    scope,
+    name,
+    value_type: Some(value_type),
+    default_value: default_value.map(fn(value) { ScalarValue(value) }),
+    description,
+    extra: [],
+  }
 }
 
 ///|
