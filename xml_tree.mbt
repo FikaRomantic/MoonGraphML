@@ -83,6 +83,7 @@ fn read_tree(
   scan_declarations(input)
   let reader = @xml.NamespaceReader::from_string(input)
   let stack : Array[XmlElementValue] = []
+  let text_sizes : Array[Int] = []
   let mut root : XmlElementValue? = None
   let mut events = 0
   while true {
@@ -99,10 +100,17 @@ fn read_tree(
         check_bound("xml_depth", stack.length() + 1, limits.xml_depth)
         check_bound(
           "attributes_per_element",
-          element.attributes.length(),
+          element.attributes.length() + element.namespace_declarations.length(),
           limits.attributes_per_element,
         )
         let parsed = xml_element(element)
+        for declaration in element.namespace_declarations {
+          check_bound(
+            "namespace_bytes",
+            utf8_size(declaration.namespace_uri),
+            limits.text_bytes,
+          )
+        }
         for attribute in parsed.attributes {
           check_bound(
             "attribute_bytes",
@@ -118,11 +126,13 @@ fn read_tree(
         }
         if event.kind is Start(_) {
           stack.push(parsed)
+          text_sizes.push(0)
         }
       }
       End(_) => {
         require(!stack.is_empty(), "xml", "unmatched closing element")
         let _ = stack.pop()
+        let _ = text_sizes.pop()
       }
       Text(text) | CData(text) => {
         check_bound("text_bytes", utf8_size(text), limits.text_bytes)
@@ -133,6 +143,12 @@ fn read_tree(
             "text outside root",
           )
         } else {
+          let last = text_sizes.length() - 1
+          let amount = utf8_size(text)
+          if amount > limits.text_bytes - text_sizes[last] {
+            raise LimitExceeded(resource="text_bytes", limit=limits.text_bytes)
+          }
+          text_sizes[last] = text_sizes[last] + amount
           stack[stack.length() - 1].content.push(Text(text))
         }
       }
