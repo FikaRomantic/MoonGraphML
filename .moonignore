@@ -1,0 +1,10 @@
+.git/
+.local/
+CONTEXT.md
+docs/adr/
+*申报*
+*审查*
+*验收记录*
+*汇总*
+scripts/
+.github/

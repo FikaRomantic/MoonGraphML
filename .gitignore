@@ -1,0 +1,16 @@
+_build/
+target/
+.mooncakes/
+.local/
+CONTEXT.md
+docs/adr/
+*申报*
+*审查*
+*验收记录*
+*汇总*
+*AI辅助*
+*ai-report*
+*review-report*
+*acceptance-report*
+__pycache__/
+*.pyc
