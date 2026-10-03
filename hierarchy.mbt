@@ -73,6 +73,7 @@ fn validate_region(
 ) -> Unit raise GraphError {
   check_bound("graph_depth", depth, limits.xml_depth)
   unique_optional_id(graph.id, graph_ids, "graph.id")
+  let _ = graph.parse_info()
   check_data(graph.data, GraphScope, catalog)
   let region = Region::new()
   collect_region(graph, region, 0, limits)
@@ -83,6 +84,12 @@ fn validate_region(
     node_ports[id] = names
   }
   for node in graph.nodes {
+    let _ = node.degree_hints()
+    let descendant_ports : Map[String, Bool] = Map([])
+    collect_ports(node.ports, descendant_ports, catalog)
+    if node.graph is Some(nested) {
+      collect_descendant_ports(nested, descendant_ports, catalog)
+    }
     check_data(node.data, NodeScope, catalog)
   }
   for edge in graph.edges {
@@ -113,6 +120,21 @@ fn validate_region(
   }
   for nested in child_graphs(graph) {
     validate_region(nested, catalog, graph_ids, depth + 1, limits)
+  }
+}
+
+///|
+/// XSD port_name_key uses .//g:port relative to each node, including nested graphs.
+fn collect_descendant_ports(
+  graph : Graph,
+  names : Map[String, Bool],
+  catalog : Map[String, Key],
+) -> Unit raise GraphError {
+  for node in graph.nodes {
+    collect_ports(node.ports, names, catalog)
+  }
+  for nested in child_graphs(graph) {
+    collect_descendant_ports(nested, names, catalog)
   }
 }
 

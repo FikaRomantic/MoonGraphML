@@ -110,7 +110,16 @@ fn write_hyperedge(
 fn write_graph(output : Output, graph : Graph) -> Unit raise GraphError {
   let attributes = [plain_attribute("edgedefault", graph.edge_default.name())]
   optional_attribute(attributes, "id", graph.id)
-  attributes.append(graph.extra)
+  // Canonical output groups all nodes before edges; refresh its advisory order hint.
+  attributes.append(
+    graph.extra.map(fn(attribute) {
+      if attribute.namespace_uri is None && attribute.name == "parse.order" {
+        { ..attribute, value: "nodesfirst", }
+      } else {
+        attribute
+      }
+    }),
+  )
   output.start("graph", attributes)
   write_description(output, graph.description)
   match graph.locator {

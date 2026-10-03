@@ -204,7 +204,10 @@ fn graphs_equal(left : Graph, right : Graph) -> Bool {
     left.description != right.description ||
     !data_equal(left.data, right.data) ||
     !locators_equal(left.locator, right.locator) ||
-    !attributes_equal(left.extra, right.extra) ||
+    !attributes_equal(
+      graph_semantic_attributes(left.extra),
+      graph_semantic_attributes(right.extra),
+    ) ||
     left.nodes.length() != right.nodes.length() ||
     left.edges.length() != right.edges.length() ||
     left.hyperedges.length() != right.hyperedges.length() {
@@ -226,6 +229,16 @@ fn graphs_equal(left : Graph, right : Graph) -> Bool {
     }
   }
   true
+}
+
+///|
+/// parse.order is an XML ordering hint, not graph data; canonical output may regenerate it.
+fn graph_semantic_attributes(
+  attributes : Array[XmlAttributeValue],
+) -> Array[XmlAttributeValue] {
+  attributes.filter(fn(attribute) {
+    !(attribute.namespace_uri is None && attribute.name == "parse.order")
+  })
 }
 
 ///|
