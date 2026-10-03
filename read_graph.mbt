@@ -4,11 +4,12 @@ priv struct ParseBudget {
   mut graphs : Int
   mut nodes : Int
   mut edges : Int
+  mut ports : Int
 }
 
 ///|
 fn ParseBudget::new(limits : Limits) -> ParseBudget {
-  { limits, graphs: 0, nodes: 0, edges: 0, }
+  { limits, graphs: 0, nodes: 0, edges: 0, ports: 0, }
 }
 
 ///|
@@ -52,6 +53,7 @@ fn read_node(
     match child.name {
       "desc" => ()
       "data" => node.data.push(read_datum(child, keys))
+      "port" => node.ports.push(read_port(child, keys, budget))
       _ => raise Unsupported(path="node", feature=child.name)
     }
   }
@@ -228,9 +230,13 @@ fn validate_flat(doc : Document) -> Unit raise GraphError {
     check_data(graph.data, GraphScope, catalog)
     let node_ids : Map[String, Bool] = Map([])
     let edge_ids : Map[String, Bool] = Map([])
+    let node_ports : Map[String, Map[String, Bool]] = Map([])
     for node in graph.nodes {
       unique_optional_id(Some(node.id), node_ids, "node.id")
       check_data(node.data, NodeScope, catalog)
+      let names : Map[String, Bool] = Map([])
+      collect_ports(node.ports, names, catalog)
+      node_ports[node.id] = names
     }
     for edge in graph.edges {
       unique_optional_id(edge.id, edge_ids, "edge.id")
@@ -244,11 +250,8 @@ fn validate_flat(doc : Document) -> Unit raise GraphError {
         "edge.target",
         "missing node \{edge.target}",
       )
-      require(
-        edge.source_port is None && edge.target_port is None,
-        "edge",
-        "missing port",
-      )
+      check_port_reference(edge.source_port, edge.source, node_ports)
+      check_port_reference(edge.target_port, edge.target, node_ports)
       check_data(edge.data, EdgeScope, catalog)
     }
   }
