@@ -45,6 +45,15 @@ fn read_node(
   let children = element_children(element)
   let node = Node::new(required_attribute(element, "id"))
   let description = read_description(children, "node")
+  let locator = find_locator(children, "node")
+  if locator is Some(_) {
+    return {
+      ..node,
+      description,
+      locator,
+      extra: extra_attributes(element, ["id"]),
+    }
+  }
   let mut nested_graph : Graph? = None
   for child in children {
     require(
@@ -142,6 +151,10 @@ fn read_graph(
     hyperedges: [],
     locator: None,
     extra: extra_attributes(element, ["id", "edgedefault"]),
+  }
+  let locator = find_locator(children, "graph")
+  if locator is Some(_) {
+    return { ..graph, locator, }
   }
   for child in children {
     require(
