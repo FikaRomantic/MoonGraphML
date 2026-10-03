@@ -230,6 +230,7 @@ fn check_data(
       scope.name(),
       "key scope does not apply",
     )
+    validate_value(datum.value, key.value_type, "data.value")
   }
 }
 
