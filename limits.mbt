@@ -7,6 +7,12 @@ pub(all) suberror GraphError {
 } derive(Eq, @debug.Debug)
 
 ///|
+pub extend GraphError with Eq::{equal, not_equal}
+
+///|
+pub extend GraphError with @debug.Debug::{to_repr}
+
+///|
 pub(all) struct Limits {
   input_bytes : Int
   xml_depth : Int
@@ -21,6 +27,12 @@ pub(all) struct Limits {
   endpoints : Int
   output_bytes : Int
 } derive(Eq, @debug.Debug)
+
+///|
+pub extend Limits with Eq::{equal, not_equal}
+
+///|
+pub extend Limits with @debug.Debug::{to_repr}
 
 ///|
 pub fn Limits::default() -> Limits {
