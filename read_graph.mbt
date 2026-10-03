@@ -44,20 +44,28 @@ fn read_node(
   let children = element_children(element)
   let node = Node::new(required_attribute(element, "id"))
   let description = read_description(children, "node")
+  let mut nested_graph : Graph? = None
   for child in children {
     require(
       child.namespace_uri == Some(GRAPHML_URI),
       "node",
       "unknown child namespace",
     )
+    require(nested_graph is None, "node.graph", "nested graph must be last")
     match child.name {
       "desc" => ()
       "data" => node.data.push(read_datum(child, keys))
       "port" => node.ports.push(read_port(child, keys, budget))
+      "graph" => nested_graph = Some(read_graph(child, keys, budget))
       _ => raise Unsupported(path="node", feature=child.name)
     }
   }
-  { ..node, description, extra: extra_attributes(element, ["id"]), }
+  {
+    ..node,
+    description,
+    graph: nested_graph,
+    extra: extra_attributes(element, ["id"]),
+  }
 }
 
 ///|
@@ -93,19 +101,22 @@ fn read_edge(
       "id", "source", "target", "sourceport", "targetport", "directed",
     ]),
   }
+  let mut nested_graph : Graph? = None
   for child in children {
     require(
       child.namespace_uri == Some(GRAPHML_URI),
       "edge",
       "unknown child namespace",
     )
+    require(nested_graph is None, "edge.graph", "nested graph must be last")
     match child.name {
       "desc" => ()
       "data" => edge.data.push(read_datum(child, keys))
+      "graph" => nested_graph = Some(read_graph(child, keys, budget))
       _ => raise Unsupported(path="edge", feature=child.name)
     }
   }
-  edge
+  { ..edge, graph: nested_graph, }
 }
 
 ///|
@@ -173,7 +184,7 @@ pub fn parse(
       _ => raise Unsupported(path="graphml", feature=child.name)
     }
   }
-  validate_flat(doc)
+  validate_hierarchy(doc, limits)
   doc
 }
 
@@ -217,42 +228,5 @@ fn unique_optional_id(
     valid_token(value, owner)
     require(!seen.contains(value), owner, "duplicate identifier \{value}")
     seen[value] = true
-  }
-}
-
-///|
-fn validate_flat(doc : Document) -> Unit raise GraphError {
-  let catalog = key_map(doc.keys)
-  check_data(doc.data, DocumentScope, catalog)
-  let graph_ids : Map[String, Bool] = Map([])
-  for graph in doc.graphs {
-    unique_optional_id(graph.id, graph_ids, "graph.id")
-    check_data(graph.data, GraphScope, catalog)
-    let node_ids : Map[String, Bool] = Map([])
-    let edge_ids : Map[String, Bool] = Map([])
-    let node_ports : Map[String, Map[String, Bool]] = Map([])
-    for node in graph.nodes {
-      unique_optional_id(Some(node.id), node_ids, "node.id")
-      check_data(node.data, NodeScope, catalog)
-      let names : Map[String, Bool] = Map([])
-      collect_ports(node.ports, names, catalog)
-      node_ports[node.id] = names
-    }
-    for edge in graph.edges {
-      unique_optional_id(edge.id, edge_ids, "edge.id")
-      require(
-        node_ids.contains(edge.source),
-        "edge.source",
-        "missing node \{edge.source}",
-      )
-      require(
-        node_ids.contains(edge.target),
-        "edge.target",
-        "missing node \{edge.target}",
-      )
-      check_port_reference(edge.source_port, edge.source, node_ports)
-      check_port_reference(edge.target_port, edge.target, node_ports)
-      check_data(edge.data, EdgeScope, catalog)
-    }
   }
 }
