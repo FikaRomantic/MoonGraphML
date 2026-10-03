@@ -4,6 +4,7 @@ fn main {
   if args.length() != 3 ||
     (
       args[1] != "roundtrip" &&
+      args[1] != "roundtrip-compatible" &&
       args[1] != "inspect" &&
       args[1] != "generate" &&
       args[1] != "verify"
@@ -40,14 +41,21 @@ fn main {
       return
     }
   }
-  let document = @gml.parse(input) catch {
+  let profile = if args[1] == "roundtrip-compatible" {
+    @gml.ReferenceLibraries
+  } else {
+    @gml.Strict
+  }
+  let document = @gml.parse(input, profile~) catch {
     error => {
       println("ERROR: \{error.message()}")
       @sys.exit(1)
       return
     }
   }
-  if args[1] == "roundtrip" || args[1] == "verify" {
+  if args[1] == "roundtrip" ||
+    args[1] == "roundtrip-compatible" ||
+    args[1] == "verify" {
     let output = @gml.serialize(document) catch {
       error => {
         println("ERROR: \{error.message()}")

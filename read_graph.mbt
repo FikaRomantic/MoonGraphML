@@ -178,8 +178,12 @@ fn read_graph(
 pub fn parse(
   input : String,
   limits? : Limits = Limits::default(),
+  profile? : ReadProfile = Strict,
 ) -> Document raise GraphError {
   let root = read_tree(input, limits)
+  if profile == ReferenceLibraries {
+    normalize_reference_tree(root)
+  }
   let keys = read_keys(root, limits)
   let catalog = key_map(keys)
   let children = element_children(root)
