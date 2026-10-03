@@ -14,4 +14,5 @@ preferred_target = "wasm-gc"
 
 import {
   "Milky2018/xml@0.5.0",
+  "moonbitlang/x@0.4.49",
 }
