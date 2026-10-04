@@ -181,6 +181,7 @@ pub fn parse(
   profile? : ReadProfile = Strict,
 ) -> Document raise GraphError {
   let root = read_tree(input, limits)
+  normalize_graphml_tokens(root)
   if profile == ReferenceLibraries {
     normalize_reference_tree(root)
   }
