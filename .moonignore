@@ -1,4 +1,7 @@
 .git/
+_build/
+target/
+.mooncakes/
 .local/
 CONTEXT.md
 docs/adr/
@@ -6,5 +9,14 @@ docs/adr/
 *审查*
 *验收记录*
 *汇总*
+*AI辅助*
+*ai-report*
+*review-report*
+*acceptance-report*
+*research-report*
+*summary-report*
+*研究报告*
+*调研报告*
+*proposal*
 scripts/
 .github/

@@ -12,5 +12,10 @@ docs/adr/
 *ai-report*
 *review-report*
 *acceptance-report*
+*research-report*
+*summary-report*
+*研究报告*
+*调研报告*
+*proposal*
 __pycache__/
 *.pyc
