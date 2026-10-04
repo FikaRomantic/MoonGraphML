@@ -7,7 +7,7 @@ fn write_locator(output : Output, locator : Locator) -> Unit raise GraphError {
     attributes.push({ namespace_uri: Some(XLINK_URI), name: "type", value, })
   }
   attributes.append(locator.extra)
-  output.start("locator", attributes)
+  output.graphml_start("locator", attributes, namespaces=locator.namespaces)
   output.end("locator")
 }
 
@@ -15,7 +15,7 @@ fn write_locator(output : Output, locator : Locator) -> Unit raise GraphError {
 fn write_port(output : Output, port : Port) -> Unit raise GraphError {
   let attributes = [plain_attribute("name", port.name)]
   attributes.append(port.extra)
-  output.start("port", attributes)
+  output.graphml_start("port", attributes, namespaces=port.namespaces)
   write_description(output, port.description)
   write_data(output, port.data)
   for nested in port.ports {
@@ -28,7 +28,7 @@ fn write_port(output : Output, port : Port) -> Unit raise GraphError {
 fn write_node(output : Output, node : Node) -> Unit raise GraphError {
   let attributes = [plain_attribute("id", node.id)]
   attributes.append(node.extra)
-  output.start("node", attributes)
+  output.graphml_start("node", attributes, namespaces=node.namespaces)
   write_description(output, node.description)
   match node.locator {
     Some(locator) => write_locator(output, locator)
@@ -60,7 +60,7 @@ fn write_edge(output : Output, edge : Edge) -> Unit raise GraphError {
     )
   }
   attributes.append(edge.extra)
-  output.start("edge", attributes)
+  output.graphml_start("edge", attributes, namespaces=edge.namespaces)
   write_description(output, edge.description)
   write_data(output, edge.data)
   if edge.graph is Some(graph) {
@@ -81,7 +81,7 @@ fn write_endpoint(
   optional_attribute(attributes, "id", endpoint.id)
   optional_attribute(attributes, "port", endpoint.port)
   attributes.append(endpoint.extra)
-  output.start("endpoint", attributes)
+  output.graphml_start("endpoint", attributes, namespaces=endpoint.namespaces)
   write_description(output, endpoint.description)
   output.end("endpoint")
 }
@@ -94,7 +94,7 @@ fn write_hyperedge(
   let attributes = []
   optional_attribute(attributes, "id", hyperedge.id)
   attributes.append(hyperedge.extra)
-  output.start("hyperedge", attributes)
+  output.graphml_start("hyperedge", attributes, namespaces=hyperedge.namespaces)
   write_description(output, hyperedge.description)
   write_data(output, hyperedge.data)
   for endpoint in hyperedge.endpoints {
@@ -120,7 +120,7 @@ fn write_graph(output : Output, graph : Graph) -> Unit raise GraphError {
       }
     }),
   )
-  output.start("graph", attributes)
+  output.graphml_start("graph", attributes, namespaces=graph.namespaces)
   write_description(output, graph.description)
   match graph.locator {
     Some(locator) => write_locator(output, locator)
@@ -149,7 +149,7 @@ pub fn serialize(
   limits.validate()
   let output = Output::new(limits)
   output.raw("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
-  output.start("graphml", doc.extra, default_ns=GRAPHML_URI)
+  output.graphml_start("graphml", doc.extra, namespaces=doc.namespaces)
   write_description(output, doc.description)
   for key in doc.keys {
     write_key(output, key)

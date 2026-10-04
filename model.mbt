@@ -79,11 +79,12 @@ pub(all) struct Datum {
   id : String?
   value : DataValue
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
 pub fn Datum::new(key : String, value : Scalar, id? : String) -> Datum {
-  { key, value: ScalarValue(value), id, extra: [], }
+  { key, value: ScalarValue(value), id, extra: [], namespaces: [], }
 }
 
 ///|
@@ -91,6 +92,7 @@ pub(all) struct Locator {
   href : String
   link_type : String?
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
@@ -104,6 +106,7 @@ pub(all) struct Graph {
   hyperedges : Array[Hyperedge]
   locator : Locator?
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
@@ -122,6 +125,7 @@ pub fn Graph::new(
     hyperedges: [],
     locator: None,
     extra: [],
+    namespaces: [],
   }
 }
 
@@ -134,6 +138,7 @@ pub(all) struct Node {
   graph : Graph?
   locator : Locator?
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
@@ -146,6 +151,7 @@ pub fn Node::new(id : String, description? : String) -> Node {
     graph: None,
     locator: None,
     extra: [],
+    namespaces: [],
   }
 }
 
@@ -161,6 +167,7 @@ pub(all) struct Edge {
   data : Array[Datum]
   graph : Graph?
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
@@ -183,6 +190,7 @@ pub fn Edge::new(
     data: [],
     graph: None,
     extra: [],
+    namespaces: [],
   }
 }
 
@@ -202,11 +210,12 @@ pub(all) struct Port {
   data : Array[Datum]
   ports : Array[Port]
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
 pub fn Port::new(name : String, description? : String) -> Port {
-  { name, description, data: [], ports: [], extra: [], }
+  { name, description, data: [], ports: [], extra: [], namespaces: [], }
 }
 
 ///|
@@ -217,11 +226,20 @@ pub(all) struct Hyperedge {
   endpoints : Array[Endpoint]
   graph : Graph?
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
 pub fn Hyperedge::new(id? : String, description? : String) -> Hyperedge {
-  { id, description, data: [], endpoints: [], graph: None, extra: [], }
+  {
+    id,
+    description,
+    data: [],
+    endpoints: [],
+    graph: None,
+    extra: [],
+    namespaces: [],
+  }
 }
 
 ///|
@@ -232,6 +250,7 @@ pub(all) struct Endpoint {
   kind : EndpointKind
   description : String?
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|
@@ -241,7 +260,7 @@ pub fn Endpoint::new(
   port? : String,
   id? : String,
 ) -> Endpoint {
-  { id, node, port, kind, description: None, extra: [], }
+  { id, node, port, kind, description: None, extra: [], namespaces: [], }
 }
 
 ///|
@@ -251,6 +270,7 @@ pub struct Document {
   data : Array[Datum]
   description : String?
   extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
 }
 
 ///|

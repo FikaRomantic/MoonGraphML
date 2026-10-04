@@ -19,6 +19,7 @@ fn read_endpoint(
     ),
     description: read_description(children, "endpoint"),
     extra: extra_attributes(element, ["id", "node", "port", "type"]),
+    namespaces: element.namespaces,
   }
 }
 
@@ -39,6 +40,7 @@ fn read_hyperedge(
     endpoints: [],
     graph: None,
     extra: extra_attributes(element, ["id"]),
+    namespaces: element.namespaces,
   }
   let mut nested_graph : Graph? = None
   for child in children {

@@ -4,7 +4,7 @@ fn write_description(
   description : String?,
 ) -> Unit raise GraphError {
   if description is Some(text) {
-    output.start("desc", [])
+    output.graphml_start("desc", [])
     output.escaped(text, false)
     output.end("desc")
   }
@@ -24,7 +24,7 @@ fn write_data(output : Output, data : Array[Datum]) -> Unit raise GraphError {
     let attributes = [plain_attribute("key", datum.key)]
     optional_attribute(attributes, "id", datum.id)
     attributes.append(datum.extra)
-    output.start("data", attributes)
+    output.graphml_start("data", attributes, namespaces=datum.namespaces)
     write_payload(output, datum.value)
     output.end("data")
   }
@@ -41,10 +41,14 @@ fn write_key(output : Output, key : Key) -> Unit raise GraphError {
     attributes.push(plain_attribute("attr.type", kind.name()))
   }
   attributes.append(key.extra)
-  output.start("key", attributes)
+  output.graphml_start("key", attributes, namespaces=key.namespaces)
   write_description(output, key.description)
   if key.default_value is Some(value) {
-    output.start("default", [])
+    output.graphml_start(
+      "default",
+      key.default_extra,
+      namespaces=key.default_namespaces,
+    )
     write_payload(output, value)
     output.end("default")
   }

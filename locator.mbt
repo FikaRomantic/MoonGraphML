@@ -37,7 +37,7 @@ fn read_locator(element : XmlElementValue) -> Locator raise GraphError {
     !(attribute.namespace_uri == Some(XLINK_URI) &&
     (attribute.name == "href" || attribute.name == "type"))
   })
-  { href, link_type, extra, }
+  { href, link_type, extra, namespaces: element.namespaces, }
 }
 
 ///|

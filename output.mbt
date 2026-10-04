@@ -3,8 +3,14 @@ priv struct Output {
   buffer : StringBuilder
   limit : Int
   depth_limit : Int
+  attribute_limit : Int
+  text_limit : Int
   mut bytes : Int
+  mut attribute_count : Int
   stack : Array[String]
+  qualified_names : Array[String]
+  namespace_scopes : Array[Array[NamespaceBinding]]
+  text_sizes : Array[Int]
 }
 
 ///|
@@ -13,8 +19,14 @@ fn Output::new(limits : Limits) -> Output {
     buffer: StringBuilder(),
     limit: limits.output_bytes,
     depth_limit: limits.xml_depth,
+    attribute_limit: limits.attributes_per_element,
+    text_limit: limits.text_bytes,
     bytes: 0,
+    attribute_count: 0,
     stack: [],
+    qualified_names: [],
+    namespace_scopes: [],
+    text_sizes: [],
   }
 }
 
@@ -38,7 +50,18 @@ fn Output::escaped(
   text : String,
   attribute : Bool,
 ) -> Unit raise GraphError {
-  let _ = utf8_size(text)
+  let size = utf8_size(text)
+  if attribute {
+    check_bound("attribute_bytes", size, self.text_limit)
+  } else {
+    let previous = self.text_sizes.last().unwrap_or(0)
+    if size > self.text_limit - previous {
+      raise LimitExceeded(resource="text_bytes", limit=self.text_limit)
+    }
+    if !self.text_sizes.is_empty() {
+      self.text_sizes[self.text_sizes.length() - 1] = previous + size
+    }
+  }
   for ch in text {
     let c = ch.to_int()
     require(
@@ -100,6 +123,12 @@ fn Output::attribute(
   name : String,
   value : String,
 ) -> Unit raise GraphError {
+  check_bound(
+    "attributes_per_element",
+    self.attribute_count + 1,
+    self.attribute_limit,
+  )
+  self.attribute_count = self.attribute_count + 1
   self.raw(" \{name}=\"")
   self.escaped(value, true)
   self.raw("\"")
@@ -111,14 +140,71 @@ fn Output::start(
   name : String,
   attributes : Array[XmlAttributeValue],
   default_ns? : String,
+  prefix? : String,
+  namespaces? : Array[NamespaceBinding] = [],
 ) -> Unit raise GraphError {
   valid_local_name(name)
+  self.attribute_count = 0
   check_bound("output_depth", self.stack.length() + 1, self.depth_limit)
-  self.raw("<\{name}")
-  if default_ns is Some(uri) {
-    self.attribute("xmlns", uri)
+  let inherited = match self.namespace_scopes.last() {
+    Some(scope) => scope
+    None => base_namespaces()
   }
-  let prefixes : Map[String, String] = Map([])
+  let changes_scope = namespaces.any(fn(binding) {
+      namespace_uri_for(inherited, binding.prefix) !=
+      Some(binding.namespace_uri)
+    }) ||
+    default_ns
+    .map(fn(uri) { namespace_uri_for(inherited, None) != Some(uri) })
+    .unwrap_or(false) ||
+    attributes.any(fn(attribute) {
+      attribute.namespace_uri is Some(uri) &&
+      uri != "http://www.w3.org/XML/1998/namespace"
+    })
+  let scope = if changes_scope { inherited.copy() } else { inherited }
+  let declarations : Array[NamespaceBinding] = []
+  let seen : Map[String?, Bool] = Map([])
+  for binding in namespaces {
+    validate_namespace_binding(binding)
+    require(
+      !seen.contains(binding.prefix),
+      "xml.namespace",
+      "duplicate prefix binding",
+    )
+    seen[binding.prefix] = true
+    if namespace_uri_for(scope, binding.prefix) != Some(binding.namespace_uri) {
+      declarations.push(binding)
+      set_namespace_binding(scope, binding.prefix, binding.namespace_uri)
+    }
+  }
+  if default_ns is Some(uri) {
+    let binding : NamespaceBinding = { prefix: None, namespace_uri: uri, }
+    validate_namespace_binding(binding)
+    if namespace_uri_for(scope, None) != Some(uri) {
+      set_namespace_binding(declarations, None, uri)
+      set_namespace_binding(scope, None, uri)
+    }
+  }
+  let qualified_name = match prefix {
+    Some(value) => {
+      valid_local_name(value)
+      require(
+        value != "xmlns" && namespace_uri_for(scope, prefix) is Some(_),
+        "xml.namespace",
+        "unbound element prefix",
+      )
+      "\{value}:\{name}"
+    }
+    None => name
+  }
+  self.raw("<\{qualified_name}")
+  for binding in declarations {
+    let declaration = match binding.prefix {
+      Some(value) => "xmlns:\{value}"
+      None => "xmlns"
+    }
+    self.attribute(declaration, binding.namespace_uri)
+  }
   let names : Map[(String?, String), Bool] = Map([])
   for attribute in attributes {
     valid_local_name(attribute.name)
@@ -145,22 +231,77 @@ fn Output::start(
           "xml.attribute",
           "invalid attribute namespace",
         )
-        let prefix = match prefixes.get(uri) {
-          Some(value) => value
+        let existing = scope.search_by(fn(binding) {
+          binding.prefix is Some(_) && binding.namespace_uri == uri
+        })
+        let chosen = match existing {
+          Some(index) => scope[index].prefix.unwrap()
           None => {
-            let value = "a\{prefixes.length()}"
-            prefixes[uri] = value
+            let mut index = 0
+            while namespace_uri_for(scope, Some("a\{index}")) is Some(_) {
+              index = index + 1
+            }
+            let value = "a\{index}"
+            set_namespace_binding(scope, Some(value), uri)
             self.attribute("xmlns:\{value}", uri)
             value
           }
         }
-        "\{prefix}:\{attribute.name}"
+        "\{chosen}:\{attribute.name}"
       }
     }
     self.attribute(qualified, attribute.value)
   }
   self.raw(">")
   self.stack.push(name)
+  self.qualified_names.push(qualified_name)
+  self.namespace_scopes.push(scope)
+  self.text_sizes.push(0)
+}
+
+///|
+/// Preserve a GraphML container's QName value context without changing its element namespace.
+fn Output::graphml_start(
+  self : Output,
+  name : String,
+  attributes : Array[XmlAttributeValue],
+  namespaces? : Array[NamespaceBinding] = [],
+) -> Unit raise GraphError {
+  let inherited = match self.namespace_scopes.last() {
+    Some(scope) => scope
+    None => {
+      let scope = base_namespaces()
+      set_namespace_binding(scope, None, GRAPHML_URI)
+      scope
+    }
+  }
+  let scope = if namespaces.is_empty() { inherited } else { namespaces }
+  if namespace_uri_for(scope, None) == Some(GRAPHML_URI) {
+    self.start(name, attributes, namespaces=scope)
+    return
+  }
+  match
+    scope.search_by(fn(binding) {
+      binding.prefix is Some(_) && binding.namespace_uri == GRAPHML_URI
+    }) {
+    Some(index) =>
+      self.start(
+        name,
+        attributes,
+        prefix?=scope[index].prefix,
+        namespaces=scope,
+      )
+    None => {
+      let context = scope.copy()
+      let mut index = 0
+      while namespace_uri_for(context, Some("gml\{index}")) is Some(_) {
+        index = index + 1
+      }
+      let prefix = "gml\{index}"
+      context.push({ prefix: Some(prefix), namespace_uri: GRAPHML_URI, })
+      self.start(name, attributes, prefix~, namespaces=context)
+    }
+  }
 }
 
 ///|
@@ -171,7 +312,10 @@ fn Output::end(self : Output, name : String) -> Unit raise GraphError {
     "unbalanced output structure",
   )
   let _ = self.stack.pop()
-  self.raw("</\{name}>")
+  let qualified = self.qualified_names.pop().unwrap()
+  let _ = self.namespace_scopes.pop()
+  let _ = self.text_sizes.pop()
+  self.raw("</\{qualified}>")
 }
 
 ///|
@@ -205,11 +349,47 @@ fn write_xml_values(
     match value {
       Text(text) => output.escaped(text, false)
       Element(element) => {
-        output.start(
-          element.name,
-          element.attributes,
-          default_ns=element.namespace_uri.unwrap_or(""),
+        require(
+          element.namespace_uri != Some(""),
+          "xml.namespace",
+          "use None for an unnamespaced element",
         )
+        let prefix = if element.namespace_uri ==
+          Some("http://www.w3.org/XML/1998/namespace") {
+          Some("xml")
+        } else {
+          element.prefix
+        }
+        let namespaces = element.namespaces.copy()
+        if prefix is Some(value) {
+          let uri = element.namespace_uri.unwrap_or_else(() => {
+            raise InvalidGraph(
+              path="xml.namespace",
+              reason="prefixed element has no namespace",
+            )
+          })
+          match namespace_uri_for(namespaces, prefix) {
+            Some(bound) =>
+              require(
+                bound == uri,
+                "xml.namespace",
+                "element prefix binding disagrees with expanded name",
+              )
+            None => set_namespace_binding(namespaces, Some(value), uri)
+          }
+        } else {
+          let uri = element.namespace_uri.unwrap_or("")
+          match namespace_uri_for(namespaces, None) {
+            Some(bound) =>
+              require(
+                bound == uri,
+                "xml.namespace",
+                "default binding disagrees with expanded name",
+              )
+            None => set_namespace_binding(namespaces, None, uri)
+          }
+        }
+        output.start(element.name, element.attributes, prefix?, namespaces~)
         write_xml_values(output, element.content)
         output.end(element.name)
       }

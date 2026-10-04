@@ -54,6 +54,12 @@ fn xml_equal(left : Array[XmlValue], right : Array[XmlValue]) -> Bool {
         a.namespace_uri == b.namespace_uri &&
         a.name == b.name &&
         attributes_equal(a.attributes, b.attributes) &&
+        namespace_context_equal(
+          a.namespaces,
+          b.namespaces,
+          a.attributes,
+          a.content,
+        ) &&
         xml_equal(a.content, b.content)
       _ => false
     }
@@ -96,6 +102,12 @@ fn data_equal(left : Array[Datum], right : Array[Datum]) -> Bool {
       Some(other) =>
         other.id == datum.id &&
         values_equal(other.value, datum.value) &&
+        namespace_context_equal(
+          other.namespaces,
+          datum.namespaces,
+          other.extra,
+          value_namespace_content(Some(other.value)),
+        ) &&
         attributes_equal(other.extra, datum.extra)
       None => false
     }
@@ -109,6 +121,7 @@ fn locators_equal(left : Locator?, right : Locator?) -> Bool {
     (Some(a), Some(b)) =>
       a.href == b.href &&
       a.link_type.unwrap_or("simple") == b.link_type.unwrap_or("simple") &&
+      namespace_context_equal(a.namespaces, b.namespaces, a.extra, []) &&
       attributes_equal(a.extra, b.extra)
     _ => false
   }
@@ -126,6 +139,7 @@ fn ports_equal(left : Array[Port], right : Array[Port]) -> Bool {
       a.description != b.description ||
       !data_equal(a.data, b.data) ||
       !attributes_equal(a.extra, b.extra) ||
+      !namespace_context_equal(a.namespaces, b.namespaces, a.extra, []) ||
       !ports_equal(a.ports, b.ports) {
       return false
     }
@@ -150,7 +164,8 @@ fn nodes_equal(left : Node, right : Node) -> Bool {
   ports_equal(left.ports, right.ports) &&
   optional_graphs_equal(left.graph, right.graph) &&
   locators_equal(left.locator, right.locator) &&
-  attributes_equal(left.extra, right.extra)
+  attributes_equal(left.extra, right.extra) &&
+  namespace_context_equal(left.namespaces, right.namespaces, left.extra, [])
 }
 
 ///|
@@ -169,7 +184,8 @@ fn edges_equal(
   left.description == right.description &&
   data_equal(left.data, right.data) &&
   optional_graphs_equal(left.graph, right.graph) &&
-  attributes_equal(left.extra, right.extra)
+  attributes_equal(left.extra, right.extra) &&
+  namespace_context_equal(left.namespaces, right.namespaces, left.extra, [])
 }
 
 ///|
@@ -178,6 +194,7 @@ fn hyperedges_equal(left : Hyperedge, right : Hyperedge) -> Bool {
     left.description != right.description ||
     !data_equal(left.data, right.data) ||
     !attributes_equal(left.extra, right.extra) ||
+    !namespace_context_equal(left.namespaces, right.namespaces, left.extra, []) ||
     !optional_graphs_equal(left.graph, right.graph) ||
     left.endpoints.length() != right.endpoints.length() {
     return false
@@ -191,6 +208,9 @@ fn hyperedges_equal(left : Hyperedge, right : Hyperedge) -> Bool {
       a.kind != b.kind ||
       a.description != b.description ||
       !attributes_equal(a.extra, b.extra) {
+      return false
+    }
+    if !namespace_context_equal(a.namespaces, b.namespaces, a.extra, []) {
       return false
     }
   }
@@ -208,6 +228,7 @@ fn graphs_equal(left : Graph, right : Graph) -> Bool {
       graph_semantic_attributes(left.extra),
       graph_semantic_attributes(right.extra),
     ) ||
+    !namespace_context_equal(left.namespaces, right.namespaces, left.extra, []) ||
     left.nodes.length() != right.nodes.length() ||
     left.edges.length() != right.edges.length() ||
     left.hyperedges.length() != right.hyperedges.length() {
@@ -248,6 +269,7 @@ fn graph_semantic_attributes(
 pub fn Document::equivalent(self : Document, other : Document) -> Bool {
   if self.description != other.description ||
     !attributes_equal(self.extra, other.extra) ||
+    !namespace_context_equal(self.namespaces, other.namespaces, self.extra, []) ||
     !data_equal(self.data, other.data) ||
     self.keys.length() != other.keys.length() ||
     self.graphs.length() != other.graphs.length() {
@@ -264,7 +286,17 @@ pub fn Document::equivalent(self : Document, other : Document) -> Bool {
       original.value_type != key.value_type ||
       original.description != key.description ||
       !optional_values_equal(original.default_value, key.default_value) ||
+      !attributes_equal(original.default_extra, key.default_extra) ||
+      !default_context_equal(original, key) ||
       !attributes_equal(original.extra, key.extra) {
+      return false
+    }
+    if !namespace_context_equal(
+        original.namespaces,
+        key.namespaces,
+        original.extra,
+        [],
+      ) {
       return false
     }
   }

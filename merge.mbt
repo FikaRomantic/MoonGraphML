@@ -77,6 +77,34 @@ fn merge_root_attributes(
 }
 
 ///|
+/// Opaque root values may use even an unprefixed application-defined QName.
+/// Without their schema, conflicting contexts are rejected when both roots carry values.
+fn merge_root_namespaces(
+  left : Document,
+  right : Document,
+) -> Array[NamespaceBinding] raise GraphError {
+  let result = left.namespaces.copy()
+  for binding in right.namespaces {
+    match namespace_uri_for(result, binding.prefix) {
+      Some(uri) if uri != binding.namespace_uri => {
+        require(
+          left.extra.is_empty() || right.extra.is_empty(),
+          "merge.graphml",
+          "conflicting namespace context for opaque root extension values",
+        )
+        if left.extra.is_empty() && !right.extra.is_empty() {
+          set_namespace_binding(result, binding.prefix, binding.namespace_uri)
+        }
+      }
+      Some(_) => ()
+      None =>
+        set_namespace_binding(result, binding.prefix, binding.namespace_uri)
+    }
+  }
+  result
+}
+
+///|
 /// Append independently scoped graphs. Imported key IDs and global graph IDs get a prefix.
 /// Different root descriptions or conflicting root extension attributes are errors, not lost data.
 pub fn Document::merge(
@@ -112,6 +140,7 @@ pub fn Document::merge(
     }
   }
   let extra = merge_root_attributes(self.extra, other.extra)
+  let namespaces = merge_root_namespaces(self, other)
   let rewrite = fn(datum : Datum) {
     { ..datum, key: key_mapping.get(datum.key).unwrap(), }
   }
@@ -132,6 +161,7 @@ pub fn Document::merge(
     data~,
     description?,
     extra~,
+    namespaces~,
     limits~,
   )
   { document, imported_roots, key_mapping, graph_mapping, }

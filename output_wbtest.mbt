@@ -10,6 +10,8 @@ test "writer preserves attribute whitespace and resets extension namespaces" {
     Element({
       namespace_uri: None,
       name: "custom",
+      prefix: None,
+      namespaces: [],
       attributes: [],
       content: [Text("<&\r")],
     }),

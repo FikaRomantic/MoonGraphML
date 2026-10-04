@@ -44,6 +44,10 @@ fn read_key(element : XmlElementValue) -> Key raise GraphError {
   graphml_element(element, "key")
   let id = required_attribute(element, "id")
   valid_token(id, "key.id")
+  let name = attribute_value(element, "attr.name")
+  if name is Some(value) {
+    valid_token(value, "key.attr.name")
+  }
   let scope = Scope::from_name(attribute_value(element, "for").unwrap_or("all"))
   let value_type = match attribute_value(element, "attr.type") {
     Some(name) => Some(ValueType::from_name(name))
@@ -51,6 +55,8 @@ fn read_key(element : XmlElementValue) -> Key raise GraphError {
   }
   let mut description : String? = None
   let mut default_value : DataValue? = None
+  let mut default_extra : Array[XmlAttributeValue] = []
+  let mut default_namespaces : Array[NamespaceBinding] = []
   for child in element_children(element) {
     require(
       child.namespace_uri == Some(GRAPHML_URI),
@@ -69,6 +75,8 @@ fn read_key(element : XmlElementValue) -> Key raise GraphError {
       "default" => {
         require(default_value is None, "key.default", "duplicate default")
         default_value = Some(read_payload(child, value_type))
+        default_extra = child.attributes.copy()
+        default_namespaces = child.namespaces.copy()
       }
       _ => raise Unsupported(path="key", feature=child.name)
     }
@@ -76,11 +84,14 @@ fn read_key(element : XmlElementValue) -> Key raise GraphError {
   {
     id,
     scope,
-    name: attribute_value(element, "attr.name"),
+    name,
     value_type,
     default_value,
+    default_extra,
+    default_namespaces,
     description,
     extra: extra_attributes(element, ["id", "for", "attr.name", "attr.type"]),
+    namespaces: element.namespaces,
   }
 }
 
@@ -134,7 +145,9 @@ pub fn inspect_keys(
   input : String,
   limits? : Limits = Limits::default(),
 ) -> Array[Key] raise GraphError {
-  read_keys(read_tree(input, limits), limits)
+  let root = read_tree(input, limits)
+  normalize_graphml_tokens(root)
+  read_keys(root, limits)
 }
 
 ///|
@@ -167,5 +180,6 @@ fn read_datum(
     id,
     value: read_payload(element, key.value_type),
     extra: extra_attributes(element, ["id", "key"]),
+    namespaces: element.namespaces,
   }
 }

@@ -105,6 +105,12 @@ fn validate_model(doc : Document, limits : Limits) -> Unit raise GraphError {
       valid_token(name, "key.attr.name")
     }
     unique_optional_id(Some(key.id), ids, "key.id")
+    require(
+      key.default_value is Some(_) ||
+      (key.default_extra.is_empty() && key.default_namespaces.is_empty()),
+      "key.default",
+      "default metadata requires a default value",
+    )
     if key.default_value is Some(value) {
       validate_value(value, key.value_type, "key.default")
     }

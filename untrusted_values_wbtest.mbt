@@ -53,6 +53,8 @@ test "scoped attributes reject cyclic and oversized raw XML before detaching" {
   let element : XmlElementValue = {
     namespace_uri: None,
     name: "cycle",
+    prefix: None,
+    namespaces: [],
     attributes: [],
     content: [],
   }
@@ -62,6 +64,7 @@ test "scoped attributes reject cyclic and oversized raw XML before detaching" {
     id: None,
     value: XmlPayload([Element(element)]),
     extra: [],
+    namespaces: [],
   }
   assert_true(
     try {

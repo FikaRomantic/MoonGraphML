@@ -52,6 +52,7 @@ fn read_node(
       description,
       locator,
       extra: extra_attributes(element, ["id"]),
+      namespaces: element.namespaces,
     }
   }
   let mut nested_graph : Graph? = None
@@ -75,6 +76,7 @@ fn read_node(
     description,
     graph: nested_graph,
     extra: extra_attributes(element, ["id"]),
+    namespaces: element.namespaces,
   }
 }
 
@@ -110,6 +112,7 @@ fn read_edge(
     extra: extra_attributes(element, [
       "id", "source", "target", "sourceport", "targetport", "directed",
     ]),
+    namespaces: element.namespaces,
   }
   let mut nested_graph : Graph? = None
   for child in children {
@@ -151,6 +154,7 @@ fn read_graph(
     hyperedges: [],
     locator: None,
     extra: extra_attributes(element, ["id", "edgedefault"]),
+    namespaces: element.namespaces,
   }
   let locator = find_locator(children, "graph")
   if locator is Some(_) {
@@ -194,6 +198,7 @@ pub fn parse(
     data: [],
     description: read_description(children, "graphml"),
     extra: root.attributes.copy(),
+    namespaces: root.namespaces,
   }
   let budget = ParseBudget::new(limits)
   for child in children {

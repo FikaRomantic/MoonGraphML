@@ -16,6 +16,32 @@ test "constructor and getters detach mutable arrays deeply" {
 }
 
 ///|
+test "key default metadata cannot be silently lost when no default exists" {
+  let key = try! Key::new("k", NodeScope, StringValue)
+  let with_extra = {
+    ..key,
+    default_extra: [
+      { namespace_uri: Some("urn:metadata"), name: "kind", value: "label", },
+    ],
+  }
+  let with_namespaces = {
+    ..key,
+    default_namespaces: [{ prefix: Some("m"), namespace_uri: "urn:metadata", }],
+  }
+  for malformed in [with_extra, with_namespaces] {
+    assert_true(
+      try {
+        let _ = Document::new([malformed], [])
+        false
+      } catch {
+        InvalidGraph(path="key.default", ..) => true
+        _ => false
+      },
+    )
+  }
+}
+
+///|
 test "constructor rejects mismatched types and locator data loss" {
   let key = try! Key::new("k", NodeScope, Int32)
   let node = Node::new("a")
@@ -32,7 +58,12 @@ test "constructor rejects mismatched types and locator data loss" {
   )
   let located = {
     ..graph,
-    locator: Some({ href: "file:///never-read", link_type: None, extra: [], }),
+    locator: Some({
+      href: "file:///never-read",
+      link_type: None,
+      extra: [],
+      namespaces: [],
+    }),
   }
   assert_true(
     try {

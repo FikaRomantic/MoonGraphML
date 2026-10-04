@@ -6,9 +6,17 @@ pub fn Document::new(
   data? : Array[Datum] = [],
   description? : String,
   extra? : Array[XmlAttributeValue] = [],
+  namespaces? : Array[NamespaceBinding] = [],
   limits? : Limits = Limits::default(),
 ) -> Document raise GraphError {
-  let candidate : Document = { keys, graphs, data, description, extra, }
+  let candidate : Document = {
+    keys,
+    graphs,
+    data,
+    description,
+    extra,
+    namespaces,
+  }
   // The bounded exporter/parser pair also validates cycles, extra attributes and XML characters.
   // This is a one-time ownership boundary, not the fast path used by parse().
   validate_model(candidate, limits)
@@ -42,6 +50,12 @@ pub fn Document::extra_attributes(self : Document) -> Array[XmlAttributeValue] {
 }
 
 ///|
+/// Return a detached root namespace context, including bindings used in extension values.
+pub fn Document::namespace_bindings(self : Document) -> Array[NamespaceBinding] {
+  self.namespaces.copy()
+}
+
+///|
 fn clone_xml(values : Array[XmlValue]) -> Array[XmlValue] {
   values.map(fn(value) {
     match value {
@@ -49,6 +63,7 @@ fn clone_xml(values : Array[XmlValue]) -> Array[XmlValue] {
       Element(element) =>
         Element({
           ..element,
+          namespaces: element.namespaces.copy(),
           attributes: element.attributes.copy(),
           content: clone_xml(element.content),
         })
@@ -69,6 +84,9 @@ fn clone_key(key : Key) -> Key {
   {
     ..key,
     extra: key.extra.copy(),
+    namespaces: key.namespaces.copy(),
+    default_extra: key.default_extra.copy(),
+    default_namespaces: key.default_namespaces.copy(),
     default_value: key.default_value.map(clone_value),
   }
 }
@@ -76,13 +94,22 @@ fn clone_key(key : Key) -> Key {
 ///|
 fn clone_data(data : Array[Datum]) -> Array[Datum] {
   data.map(fn(datum) {
-    { ..datum, value: clone_value(datum.value), extra: datum.extra.copy(), }
+    {
+      ..datum,
+      value: clone_value(datum.value),
+      extra: datum.extra.copy(),
+      namespaces: datum.namespaces.copy(),
+    }
   })
 }
 
 ///|
 fn clone_locator(locator : Locator) -> Locator {
-  { ..locator, extra: locator.extra.copy(), }
+  {
+    ..locator,
+    extra: locator.extra.copy(),
+    namespaces: locator.namespaces.copy(),
+  }
 }
 
 ///|
@@ -92,6 +119,7 @@ fn clone_port(port : Port) -> Port {
     data: clone_data(port.data),
     ports: port.ports.map(clone_port),
     extra: port.extra.copy(),
+    namespaces: port.namespaces.copy(),
   }
 }
 
@@ -104,6 +132,7 @@ fn clone_node(node : Node) -> Node {
     graph: node.graph.map(clone_graph),
     locator: node.locator.map(clone_locator),
     extra: node.extra.copy(),
+    namespaces: node.namespaces.copy(),
   }
 }
 
@@ -114,6 +143,7 @@ fn clone_edge(edge : Edge) -> Edge {
     data: clone_data(edge.data),
     graph: edge.graph.map(clone_graph),
     extra: edge.extra.copy(),
+    namespaces: edge.namespaces.copy(),
   }
 }
 
@@ -123,10 +153,15 @@ fn clone_hyperedge(hyperedge : Hyperedge) -> Hyperedge {
     ..hyperedge,
     data: clone_data(hyperedge.data),
     endpoints: hyperedge.endpoints.map(fn(endpoint) {
-      { ..endpoint, extra: endpoint.extra.copy(), }
+      {
+        ..endpoint,
+        extra: endpoint.extra.copy(),
+        namespaces: endpoint.namespaces.copy(),
+      }
     }),
     graph: hyperedge.graph.map(clone_graph),
     extra: hyperedge.extra.copy(),
+    namespaces: hyperedge.namespaces.copy(),
   }
 }
 
@@ -140,5 +175,6 @@ fn clone_graph(graph : Graph) -> Graph {
     hyperedges: graph.hyperedges.map(clone_hyperedge),
     locator: graph.locator.map(clone_locator),
     extra: graph.extra.copy(),
+    namespaces: graph.namespaces.copy(),
   }
 }

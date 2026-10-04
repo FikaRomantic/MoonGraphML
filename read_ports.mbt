@@ -14,6 +14,7 @@ fn read_port(
     data: [],
     ports: [],
     extra: extra_attributes(element, ["name"]),
+    namespaces: element.namespaces,
   }
   for child in children {
     require(

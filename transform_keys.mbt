@@ -75,6 +75,7 @@ pub fn Document::rename_key(
     data=self.data.map(transform),
     description?=self.description,
     extra=self.extra,
+    namespaces=self.namespaces,
     limits~,
   )
 }
@@ -103,6 +104,7 @@ pub fn Document::replace_key(
     data=self.data,
     description?=self.description,
     extra=self.extra,
+    namespaces=self.namespaces,
     limits~,
   )
 }
@@ -125,6 +127,7 @@ pub fn Document::remove_key(
     data=self.data,
     description?=self.description,
     extra=self.extra,
+    namespaces=self.namespaces,
     limits~,
   )
 }

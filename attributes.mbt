@@ -125,6 +125,7 @@ pub fn Attributes::resolved(self : Attributes) -> Array[Datum] {
               id: None,
               value: clone_value(value),
               extra: [],
+              namespaces: key.default_namespaces.copy(),
             })
           }
       }

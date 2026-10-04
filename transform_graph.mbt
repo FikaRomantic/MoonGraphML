@@ -86,6 +86,7 @@ pub fn Document::replace_graph(
     data=self.data,
     description?=self.description,
     extra=self.extra,
+    namespaces=self.namespaces,
     limits~,
   )
 }
@@ -105,6 +106,7 @@ pub fn Document::append_graph(
     data=self.data,
     description?=self.description,
     extra=self.extra,
+    namespaces=self.namespaces,
     limits~,
   )
 }
@@ -130,6 +132,7 @@ pub fn Document::select_graphs(
     data=self.data,
     description?=self.description,
     extra=self.extra,
+    namespaces=self.namespaces,
     limits~,
   )
 }

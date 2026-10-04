@@ -6,9 +6,18 @@ pub(all) struct XmlAttributeValue {
 }
 
 ///|
+/// A prefix binding in scope. None denotes the default namespace; an empty URI resets it.
+pub(all) struct NamespaceBinding {
+  prefix : String?
+  namespace_uri : String
+}
+
+///|
 pub(all) struct XmlElementValue {
   namespace_uri : String?
   name : String
+  prefix : String?
+  namespaces : Array[NamespaceBinding]
   attributes : Array[XmlAttributeValue]
   content : Array[XmlValue]
 }
@@ -57,17 +66,118 @@ fn scan_declarations(input : String) -> Unit raise GraphError {
 }
 
 ///|
-fn xml_element(element : @xml.NamespaceElement) -> XmlElementValue {
+fn base_namespaces() -> Array[NamespaceBinding] {
+  [
+    { prefix: None, namespace_uri: "", },
+    {
+      prefix: Some("xml"),
+      namespace_uri: "http://www.w3.org/XML/1998/namespace",
+    },
+  ]
+}
+
+///|
+fn namespace_uri_for(
+  bindings : Array[NamespaceBinding],
+  prefix : String?,
+) -> String? {
+  for binding in bindings {
+    if binding.prefix == prefix {
+      return Some(binding.namespace_uri)
+    }
+  }
+  None
+}
+
+///|
+fn set_namespace_binding(
+  bindings : Array[NamespaceBinding],
+  prefix : String?,
+  namespace_uri : String,
+) -> Unit {
+  for index = 0; index < bindings.length(); index = index + 1 {
+    if bindings[index].prefix == prefix {
+      bindings[index] = { prefix, namespace_uri, }
+      return
+    }
+  }
+  bindings.push({ prefix, namespace_uri, })
+}
+
+///|
+fn validate_namespace_binding(
+  binding : NamespaceBinding,
+) -> Unit raise GraphError {
+  let _ = utf8_size(binding.namespace_uri)
+  if binding.prefix is Some(prefix) {
+    valid_local_name(prefix)
+    require(prefix != "xmlns", "xml.namespace", "reserved namespace prefix")
+    require(
+      binding.namespace_uri != "",
+      "xml.namespace",
+      "prefix cannot be undeclared",
+    )
+    require(
+      (prefix == "xml") ==
+      (binding.namespace_uri == "http://www.w3.org/XML/1998/namespace"),
+      "xml.namespace",
+      "XML namespace must use the xml prefix",
+    )
+  } else {
+    require(
+      binding.namespace_uri != "http://www.w3.org/XML/1998/namespace",
+      "xml.namespace",
+      "XML namespace cannot be the default",
+    )
+  }
+  require(
+    binding.namespace_uri != "http://www.w3.org/2000/xmlns/",
+    "xml.namespace",
+    "reserved namespace URI",
+  )
+}
+
+///|
+fn xml_element(
+  element : @xml.NamespaceElement,
+  inherited : Array[NamespaceBinding],
+) -> XmlElementValue raise GraphError {
+  valid_local_name(element.name.local_name)
+  if element.name.prefix is Some(prefix) {
+    valid_local_name(prefix)
+  }
+  // Internal parser contexts are immutable; only a declaration creates a new scope.
+  let namespaces = if element.namespace_declarations.is_empty() {
+    inherited
+  } else {
+    inherited.copy()
+  }
+  for declaration in element.namespace_declarations {
+    let binding : NamespaceBinding = {
+      prefix: declaration.prefix,
+      namespace_uri: declaration.namespace_uri,
+    }
+    validate_namespace_binding(binding)
+    set_namespace_binding(namespaces, binding.prefix, binding.namespace_uri)
+  }
+  let attributes : Array[XmlAttributeValue] = []
+  for attribute in element.attributes {
+    valid_local_name(attribute.name.local_name)
+    if attribute.name.prefix is Some(prefix) {
+      valid_local_name(prefix)
+    }
+    attributes.push({
+      namespace_uri: attribute.name.namespace_uri,
+      name: attribute.name.local_name,
+      value: attribute.value,
+    })
+  }
   {
     namespace_uri: element.name.namespace_uri,
     name: element.name.local_name,
-    attributes: element.attributes.map(fn(attribute) {
-      {
-        namespace_uri: attribute.name.namespace_uri,
-        name: attribute.name.local_name,
-        value: attribute.value,
-      }
-    }),
+    prefix: element.name.prefix,
+    namespaces,
+    attributes,
     content: [],
   }
 }
@@ -103,7 +213,11 @@ fn read_tree(
           element.attributes.length() + element.namespace_declarations.length(),
           limits.attributes_per_element,
         )
-        let parsed = xml_element(element)
+        let inherited = match stack.last() {
+          Some(parent) => parent.namespaces
+          None => base_namespaces()
+        }
+        let parsed = xml_element(element, inherited)
         for declaration in element.namespace_declarations {
           check_bound(
             "namespace_bytes",
@@ -161,7 +275,8 @@ fn read_tree(
             "only UTF-8 is supported",
           )
         }
-      Comment(_) | PI(..) => ()
+      Comment(_) => ()
+      PI(target~, ..) => valid_local_name(target)
       Eof => ()
     }
   }
@@ -215,6 +330,13 @@ fn element_children(
 
 ///|
 fn element_text(element : XmlElementValue) -> String raise GraphError {
+  if element.namespace_uri == Some(GRAPHML_URI) && element.name == "desc" {
+    require(
+      element.attributes.is_empty(),
+      "desc",
+      "description does not accept attributes",
+    )
+  }
   let buffer = StringBuilder()
   for child in element.content {
     match child {
