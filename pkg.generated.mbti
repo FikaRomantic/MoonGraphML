@@ -1,0 +1,469 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "local/moongraphml"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn from_rows(Array[Key], Array[NodeRow], Array[EdgeRow], edge_default? : Direction, graph_id? : String, limits? : Limits) -> Document raise GraphError
+
+pub fn inspect_keys(String, limits? : Limits) -> Array[Key] raise GraphError
+
+pub fn parse(String, limits? : Limits, profile? : ReadProfile) -> Document raise GraphError
+
+pub fn serialize(Document, limits? : Limits) -> String raise GraphError
+
+// Errors
+pub(all) suberror GraphError {
+  InvalidXml(String)
+  InvalidGraph(path~ : String, reason~ : String)
+  LimitExceeded(resource~ : String, limit~ : Int)
+  Unsupported(path~ : String, feature~ : String)
+} derive(Eq, @debug.Debug)
+pub fn GraphError::equal(Self, Self) -> Bool
+pub fn GraphError::message(Self) -> String
+pub fn GraphError::not_equal(Self, Self) -> Bool
+pub fn GraphError::to_repr(Self) -> @debug.Repr
+
+// Types and methods
+pub struct Attributes {
+  scope : Scope
+  keys : Array[Key]
+  catalog : Map[String, Key]
+  explicit : Map[String, Datum]
+}
+pub fn Attributes::contains_explicit(Self, String) -> Bool raise GraphError
+pub fn Attributes::get(Self, String, use_default? : Bool) -> DataValue? raise GraphError
+pub fn Attributes::key_by_name(Self, String) -> String? raise GraphError
+pub fn Attributes::new(Document, Scope, Array[Datum], limits? : Limits) -> Self raise GraphError
+pub fn Attributes::resolved(Self) -> Array[Datum]
+pub fn Attributes::scalar(Self, String, use_default? : Bool) -> Scalar? raise GraphError
+
+pub struct CountHint {
+  decimal : String
+}
+pub fn CountHint::decimal(Self) -> String
+pub fn CountHint::parse(String) -> Self raise GraphError
+pub fn CountHint::to_int64(Self) -> Int64?
+
+pub(all) enum DataValue {
+  ScalarValue(Scalar)
+  XmlPayload(Array[XmlValue])
+}
+
+pub(all) struct Datum {
+  key : String
+  id : String?
+  value : DataValue
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Datum::new(String, Scalar, id? : String) -> Self
+
+pub(all) struct DegreeHints {
+  in_degree : CountHint?
+  out_degree : CountHint?
+}
+
+pub(all) enum Direction {
+  Directed
+  Undirected
+} derive(Eq, @debug.Debug)
+pub fn Direction::equal(Self, Self) -> Bool
+pub fn Direction::from_name(String) -> Self raise GraphError
+pub fn Direction::name(Self) -> String
+pub fn Direction::not_equal(Self, Self) -> Bool
+pub fn Direction::to_repr(Self) -> @debug.Repr
+
+pub struct Document {
+  keys : Array[Key]
+  graphs : Array[Graph]
+  data : Array[Datum]
+  description : String?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Document::append_graph(Self, Graph, limits? : Limits) -> Self raise GraphError
+pub fn Document::data(Self) -> Array[Datum]
+pub fn Document::description(Self) -> String?
+pub fn Document::edge_at(Self, ElementAddress) -> Edge raise GraphError
+pub fn Document::equivalent(Self, Self) -> Bool
+pub fn Document::extra_attributes(Self) -> Array[XmlAttributeValue]
+pub fn Document::flat_graph(Self, GraphAddress) -> FlatGraph raise GraphError
+pub fn Document::graph_at(Self, GraphAddress) -> Graph raise GraphError
+pub fn Document::graph_count(Self) -> Int
+pub fn Document::graphs(Self) -> Array[Graph]
+pub fn Document::key_count(Self) -> Int
+pub fn Document::keys(Self) -> Array[Key]
+pub fn Document::merge(Self, Self, String, limits? : Limits) -> MergeResult raise GraphError
+pub fn Document::namespace_bindings(Self) -> Array[NamespaceBinding]
+pub fn Document::new(Array[Key], Array[Graph], data? : Array[Datum], description? : String, extra? : Array[XmlAttributeValue], namespaces? : Array[NamespaceBinding], limits? : Limits) -> Self raise GraphError
+pub fn Document::node_at(Self, ElementAddress) -> Node raise GraphError
+pub fn Document::remove_key(Self, String, limits? : Limits) -> Self raise GraphError
+pub fn Document::rename_key(Self, String, String, limits? : Limits) -> Self raise GraphError
+pub fn Document::rename_node(Self, Int, String, String, limits? : Limits) -> Self raise GraphError
+pub fn Document::rename_port(Self, Int, String, String, String, limits? : Limits) -> Self raise GraphError
+pub fn Document::replace_edge(Self, ElementAddress, Edge, limits? : Limits) -> Self raise GraphError
+pub fn Document::replace_graph(Self, GraphAddress, Graph, limits? : Limits) -> Self raise GraphError
+pub fn Document::replace_key(Self, Key, limits? : Limits) -> Self raise GraphError
+pub fn Document::replace_node(Self, ElementAddress, Node, limits? : Limits) -> Self raise GraphError
+pub fn Document::select_graphs(Self, Array[Int], limits? : Limits) -> Self raise GraphError
+pub fn Document::statistics(Self) -> Statistics
+
+pub(all) struct Edge {
+  id : String?
+  source : String
+  target : String
+  source_port : String?
+  target_port : String?
+  directed : Bool?
+  description : String?
+  data : Array[Datum]
+  graph : Graph?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Edge::effective_direction(Self, Graph) -> Direction
+pub fn Edge::new(String, String, id? : String, directed? : Bool, source_port? : String, target_port? : String) -> Self
+
+pub(all) struct EdgeRow {
+  id : String?
+  source : String
+  target : String
+  direction : Direction
+  attributes : Map[String, Scalar]
+}
+
+pub(all) struct ElementAddress {
+  graph : GraphAddress
+  index : Int
+} derive(Eq, @debug.Debug)
+pub fn ElementAddress::equal(Self, Self) -> Bool
+pub fn ElementAddress::not_equal(Self, Self) -> Bool
+pub fn ElementAddress::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Endpoint {
+  id : String?
+  node : String
+  port : String?
+  kind : EndpointKind
+  description : String?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Endpoint::new(String, kind? : EndpointKind, port? : String, id? : String) -> Self
+
+pub(all) enum EndpointKind {
+  In
+  Out
+  Undir
+} derive(Eq, @debug.Debug)
+pub fn EndpointKind::equal(Self, Self) -> Bool
+pub fn EndpointKind::from_name(String) -> Self raise GraphError
+pub fn EndpointKind::name(Self) -> String
+pub fn EndpointKind::not_equal(Self, Self) -> Bool
+pub fn EndpointKind::to_repr(Self) -> @debug.Repr
+
+pub struct FlatBuilder {
+  keys : Array[Key]
+  catalog : Map[String, Key]
+  graph : Graph
+  node_ids : Map[String, Bool]
+  edge_ids : Map[String, Bool]
+  limits : Limits
+}
+pub fn FlatBuilder::add_edge(Self, String, String, id? : String, directed? : Bool, attributes? : Array[(String, Scalar)], description? : String) -> Unit raise GraphError
+pub fn FlatBuilder::add_node(Self, String, attributes? : Array[(String, Scalar)], description? : String) -> Unit raise GraphError
+pub fn FlatBuilder::edge_count(Self) -> Int
+pub fn FlatBuilder::finish(Self) -> Document raise GraphError
+pub fn FlatBuilder::new(Array[Key], Direction, graph_id? : String, description? : String, limits? : Limits) -> Self raise GraphError
+pub fn FlatBuilder::node_count(Self) -> Int
+pub fn FlatBuilder::set_graph_data(Self, Array[(String, Scalar)]) -> Unit raise GraphError
+
+pub struct FlatGraph {
+  keys : Array[Key]
+  graph : Graph
+}
+pub fn FlatGraph::edge_rows(Self, use_defaults? : Bool) -> Array[EdgeRow] raise GraphError
+pub fn FlatGraph::graph(Self) -> Graph
+pub fn FlatGraph::indexed_edges(Self) -> Array[IndexedEdge]
+pub fn FlatGraph::node_rows(Self, use_defaults? : Bool) -> Array[NodeRow] raise GraphError
+pub fn FlatGraph::to_document(Self, limits? : Limits) -> Document raise GraphError
+
+pub(all) struct Graph {
+  id : String?
+  edge_default : Direction
+  description : String?
+  data : Array[Datum]
+  nodes : Array[Node]
+  edges : Array[Edge]
+  hyperedges : Array[Hyperedge]
+  locator : Locator?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Graph::new(Direction, id? : String, description? : String) -> Self
+pub fn Graph::parse_info(Self) -> ParseInfo raise GraphError
+
+pub(all) struct GraphAddress {
+  root : Int
+  steps : Array[GraphStep]
+} derive(Eq, @debug.Debug)
+pub fn GraphAddress::child(Self, GraphStep) -> Self
+pub fn GraphAddress::equal(Self, Self) -> Bool
+pub fn GraphAddress::not_equal(Self, Self) -> Bool
+pub fn GraphAddress::root(Int) -> Self
+pub fn GraphAddress::to_repr(Self) -> @debug.Repr
+
+pub struct GraphIndex {
+  document : Document
+  graphs : Map[String, GraphAddress]
+  nodes : Map[(Int, String), ElementAddress]
+  edges : Map[(Int, String), ElementAddress]
+  hyperedges : Map[(Int, String), ElementAddress]
+  incident : Map[(Int, String), Array[ElementAddress]]
+  endpoints : Map[(Int, String), Array[ElementAddress]]
+}
+pub fn GraphIndex::edge(Self, Int, String) -> Edge?
+pub fn GraphIndex::edge_address(Self, Int, String) -> ElementAddress?
+pub fn GraphIndex::graph_address(Self, String) -> GraphAddress?
+pub fn GraphIndex::hyperedge_address(Self, Int, String) -> ElementAddress?
+pub fn GraphIndex::incident_edges(Self, Int, String) -> Array[ElementAddress]
+pub fn GraphIndex::incident_hyperedges(Self, Int, String) -> Array[ElementAddress]
+pub fn GraphIndex::new(Document) -> Self
+pub fn GraphIndex::node(Self, Int, String) -> Node?
+pub fn GraphIndex::node_address(Self, Int, String) -> ElementAddress?
+
+pub(all) enum GraphStep {
+  NodeGraph(Int)
+  EdgeGraph(Int)
+  HyperedgeGraph(Int)
+} derive(Eq, @debug.Debug)
+pub fn GraphStep::equal(Self, Self) -> Bool
+pub fn GraphStep::not_equal(Self, Self) -> Bool
+pub fn GraphStep::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Hyperedge {
+  id : String?
+  description : String?
+  data : Array[Datum]
+  endpoints : Array[Endpoint]
+  graph : Graph?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Hyperedge::new(id? : String, description? : String) -> Self
+
+pub(all) enum IdHint {
+  CanonicalIds
+  FreeIds
+} derive(Eq, @debug.Debug)
+pub fn IdHint::equal(Self, Self) -> Bool
+pub fn IdHint::not_equal(Self, Self) -> Bool
+pub fn IdHint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct IndexedEdge {
+  id : String?
+  source : Int
+  target : Int
+  direction : Direction
+}
+
+pub(all) struct Key {
+  id : String
+  scope : Scope
+  name : String?
+  value_type : ValueType?
+  default_value : DataValue?
+  default_extra : Array[XmlAttributeValue]
+  default_namespaces : Array[NamespaceBinding]
+  description : String?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Key::new(String, Scope, ValueType, name? : String, default_value? : Scalar, description? : String) -> Self raise GraphError
+
+pub(all) struct Limits {
+  input_bytes : Int
+  xml_depth : Int
+  xml_elements : Int
+  attributes_per_element : Int
+  text_bytes : Int
+  keys : Int
+  graphs : Int
+  nodes : Int
+  edges : Int
+  ports : Int
+  endpoints : Int
+  output_bytes : Int
+} derive(Eq, @debug.Debug)
+pub fn Limits::default() -> Self
+pub fn Limits::equal(Self, Self) -> Bool
+pub fn Limits::not_equal(Self, Self) -> Bool
+pub fn Limits::to_repr(Self) -> @debug.Repr
+pub fn Limits::validate(Self) -> Unit raise GraphError
+
+pub(all) struct Locator {
+  href : String
+  link_type : String?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+
+pub(all) struct MergeResult {
+  document : Document
+  imported_roots : Array[Int]
+  key_mapping : Map[String, String]
+  graph_mapping : Map[String, String]
+}
+
+pub(all) struct NamespaceBinding {
+  prefix : String?
+  namespace_uri : String
+}
+
+pub(all) struct Node {
+  id : String
+  description : String?
+  data : Array[Datum]
+  ports : Array[Port]
+  graph : Graph?
+  locator : Locator?
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Node::degree_hints(Self) -> DegreeHints raise GraphError
+pub fn Node::new(String, description? : String) -> Self
+
+pub(all) struct NodeRow {
+  id : String
+  attributes : Map[String, Scalar]
+}
+
+pub(all) enum OrderHint {
+  FreeOrder
+  NodesFirst
+  AdjacencyList
+} derive(Eq, @debug.Debug)
+pub fn OrderHint::equal(Self, Self) -> Bool
+pub fn OrderHint::not_equal(Self, Self) -> Bool
+pub fn OrderHint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ParseInfo {
+  nodes : CountHint?
+  edges : CountHint?
+  max_in_degree : CountHint?
+  max_out_degree : CountHint?
+  node_ids : IdHint?
+  edge_ids : IdHint?
+  order : OrderHint?
+}
+pub fn ParseInfo::check_flat_counts(Self, Graph) -> Unit raise GraphError
+
+pub(all) struct Port {
+  name : String
+  description : String?
+  data : Array[Datum]
+  ports : Array[Port]
+  extra : Array[XmlAttributeValue]
+  namespaces : Array[NamespaceBinding]
+}
+pub fn Port::new(String, description? : String) -> Self
+
+pub(all) enum ReadProfile {
+  Strict
+  ReferenceLibraries
+} derive(Eq, @debug.Debug)
+pub fn ReadProfile::equal(Self, Self) -> Bool
+pub fn ReadProfile::not_equal(Self, Self) -> Bool
+pub fn ReadProfile::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Scalar {
+  BooleanValue(Bool)
+  IntegerValue(Int)
+  LongValue(Int64)
+  FloatValue(Float)
+  DoubleValue(Double)
+  TextValue(String)
+} derive(@debug.Debug)
+pub fn Scalar::equivalent(Self, Self) -> Bool
+pub fn Scalar::lexical(Self) -> String
+pub fn Scalar::parse(ValueType, String) -> Self raise GraphError
+pub fn Scalar::to_repr(Self) -> @debug.Repr
+pub fn Scalar::value_type(Self) -> ValueType
+
+pub(all) enum Scope {
+  All
+  DocumentScope
+  GraphScope
+  NodeScope
+  EdgeScope
+  PortScope
+  HyperedgeScope
+  EndpointScope
+} derive(Eq, @debug.Debug)
+pub fn Scope::applies_to(Self, Self) -> Bool
+pub fn Scope::equal(Self, Self) -> Bool
+pub fn Scope::from_name(String) -> Self raise GraphError
+pub fn Scope::name(Self) -> String
+pub fn Scope::not_equal(Self, Self) -> Bool
+pub fn Scope::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Statistics {
+  keys : Int
+  graphs : Int
+  nodes : Int
+  edges : Int
+  hyperedges : Int
+  endpoints : Int
+  ports : Int
+  data_entries : Int
+  max_graph_depth : Int
+  has_mixed_direction : Bool
+  has_parallel_edges : Bool
+  has_self_loops : Bool
+  has_locators : Bool
+  has_xml_payloads : Bool
+} derive(Eq, @debug.Debug)
+pub fn Statistics::equal(Self, Self) -> Bool
+pub fn Statistics::not_equal(Self, Self) -> Bool
+pub fn Statistics::to_repr(Self) -> @debug.Repr
+
+pub(all) enum ValueType {
+  Boolean
+  Int32
+  Int64
+  Float32
+  Float64
+  StringValue
+} derive(Eq, @debug.Debug)
+pub fn ValueType::equal(Self, Self) -> Bool
+pub fn ValueType::from_name(String) -> Self raise GraphError
+pub fn ValueType::name(Self) -> String
+pub fn ValueType::not_equal(Self, Self) -> Bool
+pub fn ValueType::to_repr(Self) -> @debug.Repr
+
+pub(all) struct XmlAttributeValue {
+  namespace_uri : String?
+  name : String
+  value : String
+}
+
+pub(all) struct XmlElementValue {
+  namespace_uri : String?
+  name : String
+  prefix : String?
+  namespaces : Array[NamespaceBinding]
+  attributes : Array[XmlAttributeValue]
+  content : Array[XmlValue]
+}
+
+pub(all) enum XmlValue {
+  Element(XmlElementValue)
+  Text(String)
+}
+
+// Type aliases
+
+// Traits
