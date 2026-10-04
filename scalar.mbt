@@ -135,6 +135,9 @@ pub fn Scalar::parse(
   kind : ValueType,
   authored : String,
 ) -> Scalar raise GraphError {
+  // Public scalar parsing can be called without the XML reader's Unicode gate.
+  // Validate before trimming or iterating an unchecked UTF-16 string.
+  let _ = utf8_size(authored)
   if kind == StringValue {
     return TextValue(authored)
   }
