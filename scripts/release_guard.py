@@ -40,7 +40,9 @@ def effective_lines(paths):
         # examples, CLI, tests and generated declarations from the 4k floor.
         if path.parent != Path(".") or path.suffix != ".mbt" or name.endswith(("_test.mbt", "_wbtest.mbt")):
             continue
-        text = (ROOT / path).read_text(encoding="utf-8")
+        # Count committed source, not a larger uncommitted working copy. The
+        # pre-commit hook uses --staged-only and does not run this final gate.
+        text = git("show", f"HEAD:{path.as_posix()}")
         in_block = False
         for line in text.splitlines():
             stripped = line.strip()
@@ -69,11 +71,15 @@ def main():
         return
     tracked = [name for name in git("ls-files", "-z").split("\0") if name]
     require(not any(forbidden(name) for name in tracked), "forbidden local report/cache in tracked files")
-    for entry in git("rev-list", "--objects", "--all").splitlines():
-        if " " in entry:
-            require(not forbidden(entry.split(" ", 1)[1]), "forbidden local report/cache in Git history")
     commits = git("rev-list", "HEAD").splitlines()
     require(len(commits) > 30, "more than 30 meaningful commits are required")
+    # rev-list --objects emits one name per object and can miss a forbidden
+    # historical filename when the blob is also reused under a permitted name.
+    # Inspect every reachable tree, including other local refs, instead.
+    for commit in git("rev-list", "--all").splitlines():
+        tree_paths = [name for name in git("ls-tree", "--full-tree", "-r", "--name-only", "-z", commit).split("\0") if name]
+        require(not any(forbidden(name) for name in tree_paths),
+                f"forbidden local report/cache in Git tree {commit}")
     for commit in commits:
         require(bool(git("diff-tree", "--root", "--no-commit-id", "--name-only", "-r", commit).strip()),
                 f"empty commit detected: {commit}")
@@ -84,6 +90,8 @@ def main():
     require(name is not None, "missing module name")
     owner = name.group(1).split("/", 1)[0]
     if args.release:
+        require(not git("status", "--porcelain").strip(),
+                "commit all release deliverables before publishing; ignored local artifacts are permitted")
         require(owner.lower() not in {"local", "username", "user", "yourname"},
                 "publishing account deliberately blank: set real owner only after user confirmation")
         require(re.search(r'^repository\s*=\s*"https://github\.com/[^\"]+"', module, re.M) is not None,
