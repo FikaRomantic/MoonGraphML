@@ -98,10 +98,8 @@ pub(all) struct IndexedEdge {
 
 ///|
 fn row_values(
-  keys : Array[Key],
   data : Array[Datum],
-  scope : Scope,
-  use_defaults : Bool,
+  defaults : Array[Key],
 ) -> Map[String, Scalar] raise GraphError {
   let values : Map[String, Scalar] = Map([])
   for datum in data {
@@ -114,22 +112,35 @@ fn row_values(
         )
     }
   }
-  if use_defaults {
-    for key in keys {
-      if key.scope.applies_to(scope) && !values.contains(key.id) {
-        match key.default_value {
-          Some(ScalarValue(value)) => values[key.id] = value
-          Some(XmlPayload(_)) =>
-            raise Unsupported(
-              path="flat.row",
-              feature="XML default cannot be a scalar table cell",
-            )
-          None => ()
-        }
+  for key in defaults {
+    if !values.contains(key.id) {
+      match key.default_value {
+        Some(ScalarValue(value)) => values[key.id] = value
+        Some(XmlPayload(_)) =>
+          raise Unsupported(
+            path="flat.row",
+            feature="XML default cannot be a scalar table cell",
+          )
+        None => ()
       }
     }
   }
   values
+}
+
+///|
+fn table_defaults(
+  keys : Array[Key],
+  scope : Scope,
+  use_defaults : Bool,
+) -> Array[Key] {
+  if use_defaults {
+    keys.filter(fn(key) {
+      key.scope.applies_to(scope) && key.default_value is Some(_)
+    })
+  } else {
+    []
+  }
 }
 
 ///|
@@ -138,12 +149,10 @@ pub fn FlatGraph::node_rows(
   self : FlatGraph,
   use_defaults? : Bool = true,
 ) -> Array[NodeRow] raise GraphError {
+  let defaults = table_defaults(self.keys, NodeScope, use_defaults)
   let result = []
   for node in self.graph.nodes {
-    result.push({
-      id: node.id,
-      attributes: row_values(self.keys, node.data, NodeScope, use_defaults),
-    })
+    result.push({ id: node.id, attributes: row_values(node.data, defaults), })
   }
   result
 }
@@ -153,6 +162,7 @@ pub fn FlatGraph::edge_rows(
   self : FlatGraph,
   use_defaults? : Bool = true,
 ) -> Array[EdgeRow] raise GraphError {
+  let defaults = table_defaults(self.keys, EdgeScope, use_defaults)
   let result = []
   for edge in self.graph.edges {
     result.push({
@@ -160,10 +170,28 @@ pub fn FlatGraph::edge_rows(
       source: edge.source,
       target: edge.target,
       direction: edge.effective_direction(self.graph),
-      attributes: row_values(self.keys, edge.data, EdgeScope, use_defaults),
+      attributes: row_values(edge.data, defaults),
     })
   }
   result
+}
+
+///|
+fn ordered_row_data(
+  values : Map[String, Scalar],
+  ordinals : Map[String, Int],
+  path : String,
+) -> Array[Datum] raise GraphError {
+  let ranked : Array[(Int, Datum)] = []
+  for (id, value) in values {
+    let ordinal = match ordinals.get(id) {
+      Some(index) => index
+      None => raise InvalidGraph(path~, reason="undefined attribute key \{id}")
+    }
+    ranked.push((ordinal, Datum::new(id, value)))
+  }
+  ranked.sort_by_key(fn(item) { item.0 })
+  ranked.map(fn(item) { item.1 })
 }
 
 ///|
@@ -193,22 +221,21 @@ pub fn from_rows(
   graph_id? : String,
   limits? : Limits = Limits::default(),
 ) -> Document raise GraphError {
+  limits.validate()
+  check_bound("keys", keys.length(), limits.keys)
+  check_bound("graphs", 1, limits.graphs)
+  check_bound("nodes", nodes.length(), limits.nodes)
+  check_bound("edges", edges.length(), limits.edges)
   let graph = Graph::new(edge_default, id?=graph_id)
-  // Iterate declarations rather than maps, so output attribute ordering is reproducible.
-  let catalog = key_map(keys)
+  // Rank declarations once, then order only authored attributes in each sparse row.
+  let ordinals : Map[String, Int] = Map([])
+  for index = 0; index < keys.length(); index = index + 1 {
+    ordinals[keys[index].id] = index
+  }
   for row in nodes {
-    let node = Node::new(row.id)
-    for (key, _) in row.attributes {
-      require(
-        catalog.contains(key),
-        "rows.node",
-        "undefined attribute key \{key}",
-      )
-    }
-    for key in keys {
-      if row.attributes.get(key.id) is Some(value) {
-        node.data.push(Datum::new(key.id, value))
-      }
+    let node = {
+      ..Node::new(row.id),
+      data: ordered_row_data(row.attributes, ordinals, "rows.node"),
     }
     graph.nodes.push(node)
   }
@@ -219,19 +246,10 @@ pub fn from_rows(
       id?=row.id,
       directed=row.direction == Directed,
     )
-    for (key, _) in row.attributes {
-      require(
-        catalog.contains(key),
-        "rows.edge",
-        "undefined attribute key \{key}",
-      )
-    }
-    for key in keys {
-      if row.attributes.get(key.id) is Some(value) {
-        edge.data.push(Datum::new(key.id, value))
-      }
-    }
-    graph.edges.push(edge)
+    graph.edges.push({
+      ..edge,
+      data: ordered_row_data(row.attributes, ordinals, "rows.edge"),
+    })
   }
   Document::new(keys, [graph], limits~)
 }
