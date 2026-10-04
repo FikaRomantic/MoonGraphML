@@ -215,6 +215,10 @@ fn check_data(
 ) -> Unit raise GraphError {
   let seen : Map[String, Bool] = Map([])
   for datum in data {
+    valid_token(datum.key, "data.key")
+    if datum.id is Some(id) {
+      valid_token(id, "data.id")
+    }
     require(
       !seen.contains(datum.key),
       scope.name(),

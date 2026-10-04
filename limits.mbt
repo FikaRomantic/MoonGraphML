@@ -90,8 +90,40 @@ fn check_bound(
 }
 
 ///|
-fn utf8_size(text : String) -> Int {
-  @utf8.encode(text).length()
+fn utf8_size(text : String) -> Int raise GraphError {
+  let mut bytes = 0
+  let mut i = 0
+  while i < text.length() {
+    let unit = text.code_unit_at(i).to_int()
+    let amount = if unit < 0x80 {
+      1
+    } else if unit < 0x800 {
+      2
+    } else if unit >= 0xD800 && unit <= 0xDBFF {
+      require(i + 1 < text.length(), "xml.unicode", "unpaired high surrogate")
+      let low = text.code_unit_at(i + 1).to_int()
+      require(
+        low >= 0xDC00 && low <= 0xDFFF,
+        "xml.unicode",
+        "unpaired high surrogate",
+      )
+      i = i + 1
+      4
+    } else {
+      require(
+        unit < 0xDC00 || unit > 0xDFFF,
+        "xml.unicode",
+        "unpaired low surrogate",
+      )
+      3
+    }
+    if bytes > 2147483647 - amount {
+      raise LimitExceeded(resource="utf8_bytes", limit=2147483647)
+    }
+    bytes = bytes + amount
+    i = i + 1
+  }
+  bytes
 }
 
 ///|

@@ -71,6 +71,9 @@ pub fn Key::new(
   description? : String,
 ) -> Key raise GraphError {
   valid_token(id, "key.id")
+  if name is Some(value) {
+    valid_token(value, "key.attr.name")
+  }
   if default_value is Some(value) {
     require(
       value.value_type() == value_type,
@@ -91,6 +94,7 @@ pub fn Key::new(
 
 ///|
 fn valid_token(value : String, path : String) -> Unit raise GraphError {
+  let _ = utf8_size(value)
   require(value.length() > 0, path, "empty NMTOKEN")
   // XML 1.0 Fifth Edition NameChar ranges; NMTOKEN may begin with a digit.
   for ch in value {

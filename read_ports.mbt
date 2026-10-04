@@ -57,6 +57,7 @@ fn check_port_reference(
   node_ports : Map[String, Map[String, Bool]],
 ) -> Unit raise GraphError {
   if port is Some(name) {
+    valid_token(name, "port.reference")
     let names = node_ports.get(node).unwrap_or(Map([]))
     require(
       names.contains(name),

@@ -50,11 +50,14 @@ fn collect_region(
     region.nodes[node.id] = node
   }
   for edge in graph.edges {
+    valid_token(edge.source, "edge.source")
+    valid_token(edge.target, "edge.target")
     unique_optional_id(edge.id, region.edges, "edge.id")
   }
   for hyperedge in graph.hyperedges {
     unique_optional_id(hyperedge.id, region.hyperedges, "hyperedge.id")
     for endpoint in hyperedge.endpoints {
+      valid_token(endpoint.node, "endpoint.node")
       unique_optional_id(endpoint.id, region.endpoints, "endpoint.id")
     }
   }

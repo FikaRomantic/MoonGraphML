@@ -1,6 +1,5 @@
 import {
   "Milky2018/xml",
-  "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/string",
   "moonbitlang/core/debug",
 }

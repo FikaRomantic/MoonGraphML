@@ -12,6 +12,7 @@ pub fn Attributes::new(
   doc : Document,
   scope : Scope,
   data : Array[Datum],
+  limits? : Limits = Limits::default(),
 ) -> Attributes raise GraphError {
   require(
     scope != All && scope != EndpointScope,
@@ -21,7 +22,14 @@ pub fn Attributes::new(
   let catalog = key_map(doc.keys)
   check_data(data, scope, catalog)
   let explicit : Map[String, Datum] = Map([])
-  for datum in clone_data(data) {
+  limits.validate()
+  let output = Output::new(limits)
+  output.start("attributes", [], default_ns=GRAPHML_URI)
+  write_data(output, data)
+  output.end("attributes")
+  let owned = read_tree(output.finish(), limits)
+  for child in element_children(owned) {
+    let datum = read_datum(child, catalog)
     explicit[datum.key] = datum
   }
   { scope, keys: doc.keys, catalog, explicit, }

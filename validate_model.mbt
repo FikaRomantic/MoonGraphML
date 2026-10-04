@@ -101,6 +101,9 @@ fn validate_model(doc : Document, limits : Limits) -> Unit raise GraphError {
   check_bound("keys", doc.keys.length(), limits.keys)
   let ids : Map[String, Bool] = Map([])
   for key in doc.keys {
+    if key.name is Some(name) {
+      valid_token(name, "key.attr.name")
+    }
     unique_optional_id(Some(key.id), ids, "key.id")
     if key.default_value is Some(value) {
       validate_value(value, key.value_type, "key.default")

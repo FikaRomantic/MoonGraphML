@@ -38,6 +38,7 @@ fn Output::escaped(
   text : String,
   attribute : Bool,
 ) -> Unit raise GraphError {
+  let _ = utf8_size(text)
   for ch in text {
     let c = ch.to_int()
     require(
