@@ -1,15 +1,168 @@
 # MoonGraphML
 
-MoonBit-native GraphML graph-data interchange library, under development.
+MoonBit-native GraphML graph-data interchange: read, validate, build, transform,
+and write graph documents with typed attributes and explicit resource limits.
+It connects MoonBit applications to existing graph-data workflows without
+reimplementing graph algorithms or visual layout.
 
-The core handles graph structure, typed attributes, and validated import/export.
-It is designed for dependency-analysis tools, network/asset topology, and scientific
-graph datasets. Graph algorithms and visual layout remain with the caller's chosen libraries.
+The current module name is `local/moongraphml`, version `0.1.0`. This is a local
+development namespace, **not a published Mooncakes package**. The publishing
+account has intentionally not been assigned; no public repository or package
+installation URL is claimed here.
 
-The implementation is original MIT code. XML syntax and namespaces use
-[Milky2018/xml](https://github.com/moonbit-community/xml-mbt), Apache-2.0.
-NetworkX and igraph serve as independent interoperability oracles; their source
-is not copied into this project.
+## Where it fits
 
-Development: `moon check --target all`, `moon test --target all`.
-Local proposals and review reports live in `.local/`, excluded from Git and releases.
+- Software and data engineering: exchange service dependencies, build graphs,
+  and data-pipeline relationships with external analysis tools.
+- Network and asset management: represent device links, named ports, nested
+  topology, and multi-party connections using hyperedges.
+- Research and data analysis: move typed relationship datasets between MoonBit
+  applications and Python/R graph-analysis workflows, retaining parallel edges,
+  self-loops, and explicit direction.
+
+## Features and boundaries
+
+The library supports GraphML key declarations, six scalar types, scoped defaults,
+directed/undirected/mixed binary edges, parallel edges, self-loops, hierarchical
+graphs, hierarchical ports, and hyperedge endpoints. It validates identifiers,
+key scopes/types, references, child ordering, and configured resource budgets.
+Owned documents, address/ID indexes, typed table views, batch construction,
+reference-aware renaming, graph replacement/selection, and document merging are
+available through the [API guide](docs/API.md).
+
+Custom XML attribute data preserves expanded names (namespace URI plus local
+name), attributes, text, payload-element prefixes, and in-scope namespace
+bindings. GraphML containers also retain their namespace contexts and extra
+attributes. This retains context for opaque QName values such as
+`xsi:type="p:Rectangle"`, including inherited bindings and default-namespace
+resets. Key defaults separately retain their wrapper attributes and namespace
+context. The library does not interpret or schema-validate these QName values.
+Structural GraphML prefixes and attribute-prefix spelling may change; comments,
+processing instructions, CDATA spelling, and source bytes are not preserved.
+Serialization is deterministic for a given document, not XML canonicalization
+or graph isomorphism. Nodes are emitted before edges; an existing `parse.order`
+hint is updated to `nodesfirst`. Other parse hints are preserved, not
+automatically recomputed after every transformation.
+
+XML parsing buffers the document in memory. This is not a constant-memory
+streaming parser, complete XML Schema validator, layout engine, or graph
+algorithm framework. DTD declarations are rejected. External GraphML locators
+are retained as metadata and never fetched; application-defined XML is not
+interpreted or executed. XML local names/prefixes must be NCNames, GraphML
+identifier/name tokens must satisfy their NMTOKEN rules, and GraphML `desc`
+elements with attributes or child elements are rejected. See
+[compatibility and security limits](docs/COMPATIBILITY.md).
+
+## Build and run locally
+
+Install the [MoonBit toolchain](https://www.moonbitlang.com/download/), then run
+these commands from the project directory:
+
+```sh
+moon update
+moon check --target all --deny-warn
+moon build --target all --deny-warn
+moon test --target all --deny-warn
+```
+
+Three executable examples exercise different workflows:
+
+```sh
+moon run --target native --deny-warn examples/dependencies
+moon run --target native --deny-warn examples/topology
+moon run --target native --deny-warn examples/datasets
+```
+
+`dependencies` builds a service graph, checks import/export equivalence, and
+looks up an incident edge. `topology` renames a port while updating binary-edge
+and hyperedge references. `datasets` resolves typed defaults into rows and
+merges separately scoped graph documents. Each example includes assertions.
+
+## Library usage
+
+For a package inside this checkout, import the local module in `moon.pkg`:
+
+```moonbit
+import {
+  "local/moongraphml" @graphml,
+}
+```
+
+A minimal executable can use the same API as the dependency example:
+
+Set `pkgtype(kind: "executable")` in that executable package's `moon.pkg` and
+place the following entry point in `main.mbt`:
+
+```moonbit
+fn main raise {
+  let builder = try! @graphml.FlatBuilder::new([], @graphml.Directed)
+  try! builder.add_node("api")
+  try! builder.add_node("database")
+  try! builder.add_edge("api", "database", id="uses")
+  let document = try! builder.finish()
+  let xml = try! @graphml.serialize(document)
+  assert_true(document.equivalent(try! @graphml.parse(xml)))
+  println(xml)
+}
+```
+
+`try!` keeps examples compact. Production callers should catch `GraphError`
+and use its variants or `message()` to report invalid data, unsupported
+projections, and exceeded budgets. Defaults remain declarations until requested
+through `Attributes` or a typed row view; they are not silently materialized.
+
+## Command-line tool
+
+The CLI reads UTF-8 GraphML files. `roundtrip`, `inspect`, and `verify` use the
+strict read profile by default; there is no separate `strict` subcommand.
+
+```sh
+moon run --target native --deny-warn cmd/graphml -- inspect tests/fixtures/flat.graphml
+moon run --target native --deny-warn cmd/graphml -- verify tests/fixtures/flat.graphml
+moon run --target native --deny-warn cmd/graphml -- roundtrip tests/fixtures/flat.graphml
+moon run --target native --deny-warn cmd/graphml -- roundtrip-compatible tests/fixtures/flat.graphml
+moon run --target native --deny-warn cmd/graphml -- generate 7
+```
+
+`inspect` prints stored counts and structural flags. `verify` checks
+model-equivalent serialization/reparsing. `roundtrip` emits normalized GraphML.
+`roundtrip-compatible` explicitly tolerates selected reference-library scalar
+spellings (`True`/`False`, `inf`/`-inf`/`nan`), without weakening reference or
+structure checks. `generate` emits a deterministic test graph for an integer
+seed. Usage errors exit with code 2; file, validation, and conversion errors exit
+with code 1. Errors currently print to standard output, so check the exit code
+before treating captured output as XML.
+
+## Interoperability
+
+The reproducible differential suite has passed **500 NetworkX 3.6.1 cases and
+300 python-igraph 1.0.0 cases, two directions per case, with zero failures**.
+These 1,600 directional checks cover a declared flat scalar multigraph subset,
+not every GraphML feature or every version of either tool. NetworkX defaults
+are explicitly expanded before re-export; the igraph subset uses finite doubles
+and avoids precision claims for arbitrary 64-bit integers. Generated IDs and
+reference-library metadata are treated according to the stated comparison
+profile. Details and reproduction commands are in
+[COMPATIBILITY.md](docs/COMPATIBILITY.md).
+
+## Development and licensing
+
+Formatting and public-interface consistency can be checked with `moon fmt` and
+`moon info`, followed by `git diff --exit-code`. The included CI installs the
+current stable toolchain, checks/builds/tests all targets with warnings denied,
+checks formatting/interfaces, and runs the three examples and a CLI smoke test.
+The workflow is configured; a successful remote run is a separate release gate.
+`python scripts/package_qa.py` packages with `moon package --frozen`, checks the
+archive's exclusions, and runs an isolated build/test/examples check without
+publishing. `python scripts/release_guard.py` checks source scale, nonempty
+history, and report/cache exclusions. Its `--release` mode deliberately refuses
+the placeholder publishing owner. Do not use `moon publish --dry-run` as an
+offline package test: publication is an explicit later operation.
+
+The original GraphML implementation is [MIT licensed](LICENSE).
+[Milky2018/xml](https://github.com/moonbit-community/xml-mbt) supplies XML syntax
+and namespace parsing; `moonbitlang/x` supplies CLI filesystem/process helpers.
+Both dependencies are Apache-2.0. NetworkX, igraph, lxml, xmlschema, elementpath,
+and texttable are independent development tools or their dependencies, not
+copied implementations or MoonBit runtime dependencies. See
+[third-party notices](THIRD_PARTY_NOTICES.md) and [changes](CHANGELOG.md).

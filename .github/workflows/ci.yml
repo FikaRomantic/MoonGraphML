@@ -1,0 +1,46 @@
+name: Check Build Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  moonbit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Toolchain and dependencies
+        run: |
+          moon version --all
+          moon update
+      - name: Check all targets
+        run: moon check --target all --deny-warn
+      - name: Build all targets
+        run: moon build --target all --deny-warn
+      - name: Test all targets
+        run: moon test --target all --deny-warn
+      - name: Formatting and public interfaces
+        run: |
+          moon fmt
+          git diff --exit-code
+          moon info
+          git diff --exit-code
+      - name: Runnable workflow examples
+        run: |
+          moon run --target native --deny-warn examples/dependencies
+          moon run --target native --deny-warn examples/topology
+          moon run --target native --deny-warn examples/datasets
+      - name: CLI smoke test
+        run: |
+          moon run --target native --deny-warn cmd/graphml -- inspect tests/fixtures/flat.graphml
+          moon run --target native --deny-warn cmd/graphml -- verify tests/fixtures/flat.graphml
