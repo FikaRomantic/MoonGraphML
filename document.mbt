@@ -3,11 +3,11 @@
 pub fn Document::new(
   keys : Array[Key],
   graphs : Array[Graph],
-  data? : Array[Datum] = [],
+  data~ : Array[Datum] = [],
   description? : String,
-  extra? : Array[XmlAttributeValue] = [],
-  namespaces? : Array[NamespaceBinding] = [],
-  limits? : Limits = Limits::default(),
+  extra~ : Array[XmlAttributeValue] = [],
+  namespaces~ : Array[NamespaceBinding] = [],
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   let candidate : Document = {
     keys,

@@ -108,11 +108,11 @@ fn rename_port_graph(
 /// Rename a hierarchical port and update binary edges and hyperedge endpoints atomically.
 pub fn Document::rename_port(
   self : Document,
-  root : Int,
+  root : Int32,
   node_id : String,
   old_name : String,
   new_name : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   bounded_index(root, self.graphs.length(), "rename.root")
   valid_token(new_name, "port.name")

@@ -143,7 +143,7 @@ fn read_keys(
 ///|
 pub fn inspect_keys(
   input : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Array[Key] raise GraphError {
   let root = read_tree(input, limits)
   normalize_graphml_tokens(root)

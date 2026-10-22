@@ -1,11 +1,11 @@
 ///|
 priv struct ParseBudget {
   limits : Limits
-  mut graphs : Int
-  mut nodes : Int
-  mut edges : Int
-  mut ports : Int
-  mut endpoints : Int
+  mut graphs : Int32
+  mut nodes : Int32
+  mut edges : Int32
+  mut ports : Int32
+  mut endpoints : Int32
 }
 
 ///|
@@ -181,8 +181,8 @@ fn read_graph(
 ///|
 pub fn parse(
   input : String,
-  limits? : Limits = Limits::default(),
-  profile? : ReadProfile = Strict,
+  limits~ : Limits = Limits::default(),
+  profile~ : ReadProfile = Strict,
 ) -> Document raise GraphError {
   let root = read_tree(input, limits)
   normalize_graphml_tokens(root)

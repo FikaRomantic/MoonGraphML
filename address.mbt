@@ -1,9 +1,9 @@
 ///|
 /// Each step names the owning element of a nested graph, by its ordinal in that graph.
 pub(all) enum GraphStep {
-  NodeGraph(Int)
-  EdgeGraph(Int)
-  HyperedgeGraph(Int)
+  NodeGraph(Int32)
+  EdgeGraph(Int32)
+  HyperedgeGraph(Int32)
 } derive(Eq, @debug.Debug)
 
 ///|
@@ -14,7 +14,7 @@ pub extend GraphStep with @debug.Debug::{to_repr}
 
 ///|
 pub(all) struct GraphAddress {
-  root : Int
+  root : Int32
   steps : Array[GraphStep]
 } derive(Eq, @debug.Debug)
 
@@ -25,7 +25,7 @@ pub extend GraphAddress with Eq::{equal, not_equal}
 pub extend GraphAddress with @debug.Debug::{to_repr}
 
 ///|
-pub fn GraphAddress::root(index : Int) -> GraphAddress {
+pub fn GraphAddress::root(index : Int32) -> GraphAddress {
   { root: index, steps: [], }
 }
 
@@ -46,8 +46,8 @@ fn copy_address(address : GraphAddress) -> GraphAddress {
 
 ///|
 fn bounded_index(
-  index : Int,
-  size : Int,
+  index : Int32,
+  size : Int32,
   path : String,
 ) -> Unit raise GraphError {
   require(index >= 0 && index < size, path, "index out of range")

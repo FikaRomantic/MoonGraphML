@@ -1,16 +1,16 @@
 ///|
 priv struct Output {
   buffer : StringBuilder
-  limit : Int
-  depth_limit : Int
-  attribute_limit : Int
-  text_limit : Int
-  mut bytes : Int
-  mut attribute_count : Int
+  limit : Int32
+  depth_limit : Int32
+  attribute_limit : Int32
+  text_limit : Int32
+  mut bytes : Int32
+  mut attribute_count : Int32
   stack : Array[String]
   qualified_names : Array[String]
   namespace_scopes : Array[Array[NamespaceBinding]]
-  text_sizes : Array[Int]
+  text_sizes : Array[Int32]
 }
 
 ///|
@@ -31,7 +31,7 @@ fn Output::new(limits : Limits) -> Output {
 }
 
 ///|
-fn Output::reserve(self : Output, amount : Int) -> Unit raise GraphError {
+fn Output::reserve(self : Output, amount : Int32) -> Unit raise GraphError {
   if amount < 0 || amount > self.limit - self.bytes {
     raise LimitExceeded(resource="output_bytes", limit=self.limit)
   }
@@ -141,7 +141,7 @@ fn Output::start(
   attributes : Array[XmlAttributeValue],
   default_ns? : String,
   prefix? : String,
-  namespaces? : Array[NamespaceBinding] = [],
+  namespaces~ : Array[NamespaceBinding] = [],
 ) -> Unit raise GraphError {
   valid_local_name(name)
   self.attribute_count = 0
@@ -265,7 +265,7 @@ fn Output::graphml_start(
   self : Output,
   name : String,
   attributes : Array[XmlAttributeValue],
-  namespaces? : Array[NamespaceBinding] = [],
+  namespaces~ : Array[NamespaceBinding] = [],
 ) -> Unit raise GraphError {
   let inherited = match self.namespace_scopes.last() {
     Some(scope) => scope

@@ -45,7 +45,7 @@ pub fn Document::rename_key(
   self : Document,
   old_id : String,
   new_id : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   valid_token(new_id, "key.id")
   let catalog = key_map(self.keys)
@@ -85,7 +85,7 @@ pub fn Document::rename_key(
 pub fn Document::replace_key(
   self : Document,
   key : Key,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   require(
     key_map(self.keys).contains(key.id),
@@ -114,7 +114,7 @@ pub fn Document::replace_key(
 pub fn Document::remove_key(
   self : Document,
   id : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   require(
     key_map(self.keys).contains(id),

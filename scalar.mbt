@@ -17,7 +17,7 @@ pub extend ValueType with @debug.Debug::{to_repr}
 ///|
 pub(all) enum Scalar {
   BooleanValue(Bool)
-  IntegerValue(Int)
+  IntegerValue(Int32)
   LongValue(Int64)
   FloatValue(Float)
   DoubleValue(Double)

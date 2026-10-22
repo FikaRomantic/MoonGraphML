@@ -2,7 +2,7 @@
 pub(all) suberror GraphError {
   InvalidXml(String)
   InvalidGraph(path~ : String, reason~ : String)
-  LimitExceeded(resource~ : String, limit~ : Int)
+  LimitExceeded(resource~ : String, limit~ : Int32)
   Unsupported(path~ : String, feature~ : String)
 } derive(Eq, @debug.Debug)
 
@@ -14,18 +14,18 @@ pub extend GraphError with @debug.Debug::{to_repr}
 
 ///|
 pub(all) struct Limits {
-  input_bytes : Int
-  xml_depth : Int
-  xml_elements : Int
-  attributes_per_element : Int
-  text_bytes : Int
-  keys : Int
-  graphs : Int
-  nodes : Int
-  edges : Int
-  ports : Int
-  endpoints : Int
-  output_bytes : Int
+  input_bytes : Int32
+  xml_depth : Int32
+  xml_elements : Int32
+  attributes_per_element : Int32
+  text_bytes : Int32
+  keys : Int32
+  graphs : Int32
+  nodes : Int32
+  edges : Int32
+  ports : Int32
+  endpoints : Int32
+  output_bytes : Int32
 } derive(Eq, @debug.Debug)
 
 ///|
@@ -81,8 +81,8 @@ pub fn Limits::validate(self : Limits) -> Unit raise GraphError {
 ///|
 fn check_bound(
   resource : String,
-  amount : Int,
-  bound : Int,
+  amount : Int32,
+  bound : Int32,
 ) -> Unit raise GraphError {
   if amount < 0 || amount > bound {
     raise LimitExceeded(resource~, limit=bound)
@@ -90,7 +90,7 @@ fn check_bound(
 }
 
 ///|
-fn utf8_size(text : String) -> Int raise GraphError {
+fn utf8_size(text : String) -> Int32 raise GraphError {
   let mut bytes = 0
   let mut i = 0
   while i < text.length() {

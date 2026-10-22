@@ -58,10 +58,10 @@ fn rename_node_graph(graph : Graph, old_id : String, new_id : String) -> Graph {
 /// Rename one node in a top-level ID scope and update all edge/hyperedge references.
 pub fn Document::rename_node(
   self : Document,
-  root : Int,
+  root : Int32,
   old_id : String,
   new_id : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   bounded_index(root, self.graphs.length(), "rename.root")
   valid_token(new_id, "node.id")
@@ -89,7 +89,7 @@ pub fn Document::replace_node(
   self : Document,
   address : ElementAddress,
   node : Node,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   let graph = graph_at(self, address.graph)
   bounded_index(address.index, graph.nodes.length(), "replace.node")
@@ -104,7 +104,7 @@ pub fn Document::replace_edge(
   self : Document,
   address : ElementAddress,
   edge : Edge,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   let graph = graph_at(self, address.graph)
   bounded_index(address.index, graph.edges.length(), "replace.edge")

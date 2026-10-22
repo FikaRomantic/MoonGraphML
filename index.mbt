@@ -1,7 +1,7 @@
 ///|
 pub(all) struct ElementAddress {
   graph : GraphAddress
-  index : Int
+  index : Int32
 } derive(Eq, @debug.Debug)
 
 ///|
@@ -20,11 +20,11 @@ fn copy_element_address(address : ElementAddress) -> ElementAddress {
 pub struct GraphIndex {
   document : Document
   graphs : Map[String, GraphAddress]
-  nodes : Map[(Int, String), ElementAddress]
-  edges : Map[(Int, String), ElementAddress]
-  hyperedges : Map[(Int, String), ElementAddress]
-  incident : Map[(Int, String), Array[ElementAddress]]
-  endpoints : Map[(Int, String), Array[ElementAddress]]
+  nodes : Map[(Int32, String), ElementAddress]
+  edges : Map[(Int32, String), ElementAddress]
+  hyperedges : Map[(Int32, String), ElementAddress]
+  incident : Map[(Int32, String), Array[ElementAddress]]
+  endpoints : Map[(Int32, String), Array[ElementAddress]]
 }
 
 ///|
@@ -46,8 +46,8 @@ pub fn GraphIndex::new(doc : Document) -> GraphIndex {
 
 ///|
 fn add_incident(
-  map : Map[(Int, String), Array[ElementAddress]],
-  key : (Int, String),
+  map : Map[(Int32, String), Array[ElementAddress]],
+  key : (Int32, String),
   address : ElementAddress,
 ) -> Unit {
   match map.get(key) {
@@ -117,7 +117,7 @@ pub fn GraphIndex::graph_address(
 ///|
 pub fn GraphIndex::node_address(
   self : GraphIndex,
-  root : Int,
+  root : Int32,
   id : String,
 ) -> ElementAddress? {
   self.nodes.get((root, id)).map(copy_element_address)
@@ -126,7 +126,7 @@ pub fn GraphIndex::node_address(
 ///|
 pub fn GraphIndex::edge_address(
   self : GraphIndex,
-  root : Int,
+  root : Int32,
   id : String,
 ) -> ElementAddress? {
   self.edges.get((root, id)).map(copy_element_address)
@@ -135,14 +135,14 @@ pub fn GraphIndex::edge_address(
 ///|
 pub fn GraphIndex::hyperedge_address(
   self : GraphIndex,
-  root : Int,
+  root : Int32,
   id : String,
 ) -> ElementAddress? {
   self.hyperedges.get((root, id)).map(copy_element_address)
 }
 
 ///|
-pub fn GraphIndex::node(self : GraphIndex, root : Int, id : String) -> Node? {
+pub fn GraphIndex::node(self : GraphIndex, root : Int32, id : String) -> Node? {
   self.nodes
   .get((root, id))
   .map(fn(address) {
@@ -153,7 +153,7 @@ pub fn GraphIndex::node(self : GraphIndex, root : Int, id : String) -> Node? {
 }
 
 ///|
-pub fn GraphIndex::edge(self : GraphIndex, root : Int, id : String) -> Edge? {
+pub fn GraphIndex::edge(self : GraphIndex, root : Int32, id : String) -> Edge? {
   self.edges
   .get((root, id))
   .map(fn(address) {
@@ -166,7 +166,7 @@ pub fn GraphIndex::edge(self : GraphIndex, root : Int, id : String) -> Edge? {
 ///|
 pub fn GraphIndex::incident_edges(
   self : GraphIndex,
-  root : Int,
+  root : Int32,
   node : String,
 ) -> Array[ElementAddress] {
   self.incident.get((root, node)).unwrap_or([]).map(copy_element_address)
@@ -175,7 +175,7 @@ pub fn GraphIndex::incident_edges(
 ///|
 pub fn GraphIndex::incident_hyperedges(
   self : GraphIndex,
-  root : Int,
+  root : Int32,
   node : String,
 ) -> Array[ElementAddress] {
   self.endpoints.get((root, node)).unwrap_or([]).map(copy_element_address)

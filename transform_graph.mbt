@@ -2,7 +2,7 @@
 fn replace_nested_graph(
   graph : Graph,
   steps : Array[GraphStep],
-  position : Int,
+  position : Int32,
   replacement : Graph,
 ) -> Graph raise GraphError {
   if position == steps.length() {
@@ -69,7 +69,7 @@ pub fn Document::replace_graph(
   self : Document,
   address : GraphAddress,
   replacement : Graph,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   bounded_index(address.root, self.graphs.length(), "replace.root")
   check_bound("graph_address_depth", address.steps.length(), limits.xml_depth)
@@ -96,7 +96,7 @@ pub fn Document::replace_graph(
 pub fn Document::append_graph(
   self : Document,
   graph : Graph,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   let graphs = self.graphs.copy()
   graphs.push(graph)
@@ -115,11 +115,11 @@ pub fn Document::append_graph(
 /// Keep selected top-level graphs, retaining the shared key catalog and document attributes.
 pub fn Document::select_graphs(
   self : Document,
-  roots : Array[Int],
-  limits? : Limits = Limits::default(),
+  roots : Array[Int32],
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   let graphs = []
-  let seen : Map[Int, Bool] = Map([])
+  let seen : Map[Int32, Bool] = Map([])
   for root in roots {
     bounded_index(root, self.graphs.length(), "select.root")
     require(!seen.contains(root), "select.root", "duplicate root selection")

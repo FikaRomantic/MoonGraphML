@@ -109,7 +109,7 @@ fn valid_token(value : String, path : String) -> Unit raise GraphError {
 }
 
 ///|
-fn xml_name_char(c : Int) -> Bool {
+fn xml_name_char(c : Int32) -> Bool {
   let ascii_name = (c >= 65 && c <= 90) ||
     (c >= 97 && c <= 122) ||
     (c >= 48 && c <= 57) ||

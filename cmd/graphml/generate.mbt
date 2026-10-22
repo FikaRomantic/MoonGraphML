@@ -1,6 +1,6 @@
 ///|
 /// Original deterministic corpus generator for cross-language interoperability testing.
-fn generate(seed : Int) -> String raise @gml.GraphError {
+fn generate(seed : Int32) -> String raise @gml.GraphError {
   if seed < 0 || seed > 1000000 {
     raise @gml.InvalidGraph(
       path="generate.seed",

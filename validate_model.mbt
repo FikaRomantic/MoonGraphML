@@ -28,7 +28,7 @@ fn validate_locator(locator : Locator) -> Unit raise GraphError {
 ///|
 fn validate_model_ports(
   ports : Array[Port],
-  depth : Int,
+  depth : Int32,
   budget : ParseBudget,
 ) -> Unit raise GraphError {
   check_bound("port_depth", depth, budget.limits.xml_depth)
@@ -42,7 +42,7 @@ fn validate_model_ports(
 ///|
 fn validate_model_graph(
   graph : Graph,
-  depth : Int,
+  depth : Int32,
   budget : ParseBudget,
 ) -> Unit raise GraphError {
   check_bound("graph_depth", depth, budget.limits.xml_depth)

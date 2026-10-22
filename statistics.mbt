@@ -1,15 +1,15 @@
 ///|
 /// Counts describe stored structure, not inferred expansion of hyperedges or locators.
 pub(all) struct Statistics {
-  keys : Int
-  graphs : Int
-  nodes : Int
-  edges : Int
-  hyperedges : Int
-  endpoints : Int
-  ports : Int
-  data_entries : Int
-  max_graph_depth : Int
+  keys : Int32
+  graphs : Int32
+  nodes : Int32
+  edges : Int32
+  hyperedges : Int32
+  endpoints : Int32
+  ports : Int32
+  data_entries : Int32
+  max_graph_depth : Int32
   has_mixed_direction : Bool
   has_parallel_edges : Bool
   has_self_loops : Bool
@@ -48,7 +48,7 @@ fn count_port(builder : StatsBuilder, port : Port) -> Unit {
 }
 
 ///|
-fn count_graph(builder : StatsBuilder, graph : Graph, depth : Int) -> Unit {
+fn count_graph(builder : StatsBuilder, graph : Graph, depth : Int32) -> Unit {
   builder.value = {
     ..builder.value,
     graphs: builder.value.graphs + 1,

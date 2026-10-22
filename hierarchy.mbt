@@ -36,7 +36,7 @@ fn Region::new() -> Region {
 fn collect_region(
   graph : Graph,
   region : Region,
-  depth : Int,
+  depth : Int32,
   limits : Limits,
 ) -> Unit raise GraphError {
   check_bound("graph_depth", depth, limits.xml_depth)
@@ -71,7 +71,7 @@ fn validate_region(
   graph : Graph,
   catalog : Map[String, Key],
   graph_ids : Map[String, Bool],
-  depth : Int,
+  depth : Int32,
   limits : Limits,
 ) -> Unit raise GraphError {
   check_bound("graph_depth", depth, limits.xml_depth)

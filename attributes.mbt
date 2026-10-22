@@ -12,7 +12,7 @@ pub fn Attributes::new(
   doc : Document,
   scope : Scope,
   data : Array[Datum],
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Attributes raise GraphError {
   require(
     scope != All && scope != EndpointScope,
@@ -58,7 +58,7 @@ fn Attributes::check_key(
 pub fn Attributes::get(
   self : Attributes,
   id : String,
-  use_default? : Bool = true,
+  use_default~ : Bool = true,
 ) -> DataValue? raise GraphError {
   let key = self.check_key(id)
   match self.explicit.get(id) {
@@ -71,7 +71,7 @@ pub fn Attributes::get(
 pub fn Attributes::scalar(
   self : Attributes,
   id : String,
-  use_default? : Bool = true,
+  use_default~ : Bool = true,
 ) -> Scalar? raise GraphError {
   match self.get(id, use_default~) {
     Some(ScalarValue(value)) => Some(value)

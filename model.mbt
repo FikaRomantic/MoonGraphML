@@ -256,7 +256,7 @@ pub(all) struct Endpoint {
 ///|
 pub fn Endpoint::new(
   node : String,
-  kind? : EndpointKind = Undir,
+  kind~ : EndpointKind = Undir,
   port? : String,
   id? : String,
 ) -> Endpoint {
@@ -274,11 +274,11 @@ pub struct Document {
 }
 
 ///|
-pub fn Document::graph_count(self : Document) -> Int {
+pub fn Document::graph_count(self : Document) -> Int32 {
   self.graphs.length()
 }
 
 ///|
-pub fn Document::key_count(self : Document) -> Int {
+pub fn Document::key_count(self : Document) -> Int32 {
   self.keys.length()
 }

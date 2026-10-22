@@ -68,7 +68,7 @@ pub fn FlatGraph::graph(self : FlatGraph) -> Graph {
 /// Produce a one-graph document. Document-level metadata is outside this selected-graph view.
 pub fn FlatGraph::to_document(
   self : FlatGraph,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   Document::new(self.keys, [self.graph], limits~)
 }
@@ -91,8 +91,8 @@ pub(all) struct EdgeRow {
 ///|
 pub(all) struct IndexedEdge {
   id : String?
-  source : Int
-  target : Int
+  source : Int32
+  target : Int32
   direction : Direction
 }
 
@@ -147,7 +147,7 @@ fn table_defaults(
 /// Tables are an explicit projection: descriptions and XML metadata remain available in graph().
 pub fn FlatGraph::node_rows(
   self : FlatGraph,
-  use_defaults? : Bool = true,
+  use_defaults~ : Bool = true,
 ) -> Array[NodeRow] raise GraphError {
   let defaults = table_defaults(self.keys, NodeScope, use_defaults)
   let result = []
@@ -160,7 +160,7 @@ pub fn FlatGraph::node_rows(
 ///|
 pub fn FlatGraph::edge_rows(
   self : FlatGraph,
-  use_defaults? : Bool = true,
+  use_defaults~ : Bool = true,
 ) -> Array[EdgeRow] raise GraphError {
   let defaults = table_defaults(self.keys, EdgeScope, use_defaults)
   let result = []
@@ -179,10 +179,10 @@ pub fn FlatGraph::edge_rows(
 ///|
 fn ordered_row_data(
   values : Map[String, Scalar],
-  ordinals : Map[String, Int],
+  ordinals : Map[String, Int32],
   path : String,
 ) -> Array[Datum] raise GraphError {
-  let ranked : Array[(Int, Datum)] = []
+  let ranked : Array[(Int32, Datum)] = []
   for (id, value) in values {
     let ordinal = match ordinals.get(id) {
       Some(index) => index
@@ -197,7 +197,7 @@ fn ordered_row_data(
 ///|
 /// Stable positional endpoints allow direct use by existing graph algorithm libraries.
 pub fn FlatGraph::indexed_edges(self : FlatGraph) -> Array[IndexedEdge] {
-  let positions : Map[String, Int] = Map([])
+  let positions : Map[String, Int32] = Map([])
   for i = 0; i < self.graph.nodes.length(); i = i + 1 {
     positions[self.graph.nodes[i].id] = i
   }
@@ -217,9 +217,9 @@ pub fn from_rows(
   keys : Array[Key],
   nodes : Array[NodeRow],
   edges : Array[EdgeRow],
-  edge_default? : Direction = Directed,
+  edge_default~ : Direction = Directed,
   graph_id? : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> Document raise GraphError {
   limits.validate()
   check_bound("keys", keys.length(), limits.keys)
@@ -228,7 +228,7 @@ pub fn from_rows(
   check_bound("edges", edges.length(), limits.edges)
   let graph = Graph::new(edge_default, id?=graph_id)
   // Rank declarations once, then order only authored attributes in each sparse row.
-  let ordinals : Map[String, Int] = Map([])
+  let ordinals : Map[String, Int32] = Map([])
   for index = 0; index < keys.length(); index = index + 1 {
     ordinals[keys[index].id] = index
   }

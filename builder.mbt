@@ -16,7 +16,7 @@ pub fn FlatBuilder::new(
   direction : Direction,
   graph_id? : String,
   description? : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> FlatBuilder raise GraphError {
   limits.validate()
   check_bound("graphs", 1, limits.graphs)
@@ -50,7 +50,7 @@ fn builder_data(
 pub fn FlatBuilder::add_node(
   self : FlatBuilder,
   id : String,
-  attributes? : Array[(String, Scalar)] = [],
+  attributes~ : Array[(String, Scalar)] = [],
   description? : String,
 ) -> Unit raise GraphError {
   valid_token(id, "node.id")
@@ -69,7 +69,7 @@ pub fn FlatBuilder::add_edge(
   target : String,
   id? : String,
   directed? : Bool,
-  attributes? : Array[(String, Scalar)] = [],
+  attributes~ : Array[(String, Scalar)] = [],
   description? : String,
 ) -> Unit raise GraphError {
   valid_token(source, "edge.source")
@@ -103,12 +103,12 @@ pub fn FlatBuilder::set_graph_data(
 }
 
 ///|
-pub fn FlatBuilder::node_count(self : FlatBuilder) -> Int {
+pub fn FlatBuilder::node_count(self : FlatBuilder) -> Int32 {
   self.graph.nodes.length()
 }
 
 ///|
-pub fn FlatBuilder::edge_count(self : FlatBuilder) -> Int {
+pub fn FlatBuilder::edge_count(self : FlatBuilder) -> Int32 {
   self.graph.edges.length()
 }
 

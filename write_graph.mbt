@@ -144,7 +144,7 @@ fn write_graph(output : Output, graph : Graph) -> Unit raise GraphError {
 /// Serialize the supported GraphML information model, not its original XML spelling.
 pub fn serialize(
   doc : Document,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> String raise GraphError {
   limits.validate()
   let output = Output::new(limits)

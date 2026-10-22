@@ -193,7 +193,7 @@ fn read_tree(
   scan_declarations(input)
   let reader = @xml.NamespaceReader::from_string(input)
   let stack : Array[XmlElementValue] = []
-  let text_sizes : Array[Int] = []
+  let text_sizes : Array[Int32] = []
   let mut root : XmlElementValue? = None
   let mut events = 0
   while true {

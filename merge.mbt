@@ -2,7 +2,7 @@
 /// The mappings make import renaming explicit to applications.
 pub(all) struct MergeResult {
   document : Document
-  imported_roots : Array[Int]
+  imported_roots : Array[Int32]
   key_mapping : Map[String, String]
   graph_mapping : Map[String, String]
 }
@@ -111,7 +111,7 @@ pub fn Document::merge(
   self : Document,
   other : Document,
   prefix : String,
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> MergeResult raise GraphError {
   valid_token(prefix, "merge.prefix")
   let catalog = key_map(self.keys)
