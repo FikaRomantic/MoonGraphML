@@ -18,7 +18,7 @@ pub fn serialize(Document, limits? : Limits) -> String raise GraphError
 pub(all) suberror GraphError {
   InvalidXml(String)
   InvalidGraph(path~ : String, reason~ : String)
-  LimitExceeded(resource~ : String, limit~ : Int)
+  LimitExceeded(resource~ : String, limit~ : Int32)
   Unsupported(path~ : String, feature~ : String)
 } derive(Eq, @debug.Debug)
 pub fn GraphError::equal(Self, Self) -> Bool
@@ -46,6 +46,41 @@ pub struct CountHint {
 pub fn CountHint::decimal(Self) -> String
 pub fn CountHint::parse(String) -> Self raise GraphError
 pub fn CountHint::to_int64(Self) -> Int64?
+
+pub struct CsrAdjacency {
+  node_ids : Array[String]
+  positions : Map[String, Int32]
+  indptr : Array[Int32]
+  indices : Array[Int32]
+  edge_indices : Array[Int32]
+  reversed : Array[Bool]
+}
+pub fn CsrAdjacency::arc_count(Self) -> Int32
+pub fn CsrAdjacency::edge_indices(Self) -> Array[Int32]
+pub fn CsrAdjacency::indices(Self) -> Array[Int32]
+pub fn CsrAdjacency::indptr(Self) -> Array[Int32]
+pub fn CsrAdjacency::node_count(Self) -> Int32
+pub fn CsrAdjacency::node_ids(Self) -> Array[String]
+pub fn CsrAdjacency::node_index(Self, String) -> Int32?
+pub fn CsrAdjacency::reversed(Self) -> Array[Bool]
+pub fn CsrAdjacency::row(Self, Int32) -> Array[CsrEntry] raise GraphError
+
+pub(all) struct CsrEntry {
+  target : Int32
+  edge_index : Int32
+  reversed : Bool
+} derive(Eq, @debug.Debug)
+pub fn CsrEntry::equal(Self, Self) -> Bool
+pub fn CsrEntry::not_equal(Self, Self) -> Bool
+pub fn CsrEntry::to_repr(Self) -> @debug.Repr
+
+pub(all) enum CsrOrientation {
+  Outgoing
+  Incoming
+} derive(Eq, @debug.Debug)
+pub fn CsrOrientation::equal(Self, Self) -> Bool
+pub fn CsrOrientation::not_equal(Self, Self) -> Bool
+pub fn CsrOrientation::to_repr(Self) -> @debug.Repr
 
 pub(all) enum DataValue {
   ScalarValue(Scalar)
@@ -92,9 +127,9 @@ pub fn Document::equivalent(Self, Self) -> Bool
 pub fn Document::extra_attributes(Self) -> Array[XmlAttributeValue]
 pub fn Document::flat_graph(Self, GraphAddress) -> FlatGraph raise GraphError
 pub fn Document::graph_at(Self, GraphAddress) -> Graph raise GraphError
-pub fn Document::graph_count(Self) -> Int
+pub fn Document::graph_count(Self) -> Int32
 pub fn Document::graphs(Self) -> Array[Graph]
-pub fn Document::key_count(Self) -> Int
+pub fn Document::key_count(Self) -> Int32
 pub fn Document::keys(Self) -> Array[Key]
 pub fn Document::merge(Self, Self, String, limits? : Limits) -> MergeResult raise GraphError
 pub fn Document::namespace_bindings(Self) -> Array[NamespaceBinding]
@@ -102,13 +137,13 @@ pub fn Document::new(Array[Key], Array[Graph], data? : Array[Datum], description
 pub fn Document::node_at(Self, ElementAddress) -> Node raise GraphError
 pub fn Document::remove_key(Self, String, limits? : Limits) -> Self raise GraphError
 pub fn Document::rename_key(Self, String, String, limits? : Limits) -> Self raise GraphError
-pub fn Document::rename_node(Self, Int, String, String, limits? : Limits) -> Self raise GraphError
-pub fn Document::rename_port(Self, Int, String, String, String, limits? : Limits) -> Self raise GraphError
+pub fn Document::rename_node(Self, Int32, String, String, limits? : Limits) -> Self raise GraphError
+pub fn Document::rename_port(Self, Int32, String, String, String, limits? : Limits) -> Self raise GraphError
 pub fn Document::replace_edge(Self, ElementAddress, Edge, limits? : Limits) -> Self raise GraphError
 pub fn Document::replace_graph(Self, GraphAddress, Graph, limits? : Limits) -> Self raise GraphError
 pub fn Document::replace_key(Self, Key, limits? : Limits) -> Self raise GraphError
 pub fn Document::replace_node(Self, ElementAddress, Node, limits? : Limits) -> Self raise GraphError
-pub fn Document::select_graphs(Self, Array[Int], limits? : Limits) -> Self raise GraphError
+pub fn Document::select_graphs(Self, Array[Int32], limits? : Limits) -> Self raise GraphError
 pub fn Document::statistics(Self) -> Statistics
 
 pub(all) struct Edge {
@@ -137,7 +172,7 @@ pub(all) struct EdgeRow {
 
 pub(all) struct ElementAddress {
   graph : GraphAddress
-  index : Int
+  index : Int32
 } derive(Eq, @debug.Debug)
 pub fn ElementAddress::equal(Self, Self) -> Bool
 pub fn ElementAddress::not_equal(Self, Self) -> Bool
@@ -175,10 +210,10 @@ pub struct FlatBuilder {
 }
 pub fn FlatBuilder::add_edge(Self, String, String, id? : String, directed? : Bool, attributes? : Array[(String, Scalar)], description? : String) -> Unit raise GraphError
 pub fn FlatBuilder::add_node(Self, String, attributes? : Array[(String, Scalar)], description? : String) -> Unit raise GraphError
-pub fn FlatBuilder::edge_count(Self) -> Int
+pub fn FlatBuilder::edge_count(Self) -> Int32
 pub fn FlatBuilder::finish(Self) -> Document raise GraphError
 pub fn FlatBuilder::new(Array[Key], Direction, graph_id? : String, description? : String, limits? : Limits) -> Self raise GraphError
-pub fn FlatBuilder::node_count(Self) -> Int
+pub fn FlatBuilder::node_count(Self) -> Int32
 pub fn FlatBuilder::set_graph_data(Self, Array[(String, Scalar)]) -> Unit raise GraphError
 
 pub struct FlatGraph {
@@ -188,7 +223,9 @@ pub struct FlatGraph {
 pub fn FlatGraph::edge_rows(Self, use_defaults? : Bool) -> Array[EdgeRow] raise GraphError
 pub fn FlatGraph::graph(Self) -> Graph
 pub fn FlatGraph::indexed_edges(Self) -> Array[IndexedEdge]
+pub fn FlatGraph::induced_subgraph(Self, Array[String], limits? : Limits) -> Document raise GraphError
 pub fn FlatGraph::node_rows(Self, use_defaults? : Bool) -> Array[NodeRow] raise GraphError
+pub fn FlatGraph::to_csr(Self, orientation? : CsrOrientation, max_arcs? : Int32) -> CsrAdjacency raise GraphError
 pub fn FlatGraph::to_document(Self, limits? : Limits) -> Document raise GraphError
 
 pub(all) struct Graph {
@@ -207,38 +244,38 @@ pub fn Graph::new(Direction, id? : String, description? : String) -> Self
 pub fn Graph::parse_info(Self) -> ParseInfo raise GraphError
 
 pub(all) struct GraphAddress {
-  root : Int
+  root : Int32
   steps : Array[GraphStep]
 } derive(Eq, @debug.Debug)
 pub fn GraphAddress::child(Self, GraphStep) -> Self
 pub fn GraphAddress::equal(Self, Self) -> Bool
 pub fn GraphAddress::not_equal(Self, Self) -> Bool
-pub fn GraphAddress::root(Int) -> Self
+pub fn GraphAddress::root(Int32) -> Self
 pub fn GraphAddress::to_repr(Self) -> @debug.Repr
 
 pub struct GraphIndex {
   document : Document
   graphs : Map[String, GraphAddress]
-  nodes : Map[(Int, String), ElementAddress]
-  edges : Map[(Int, String), ElementAddress]
-  hyperedges : Map[(Int, String), ElementAddress]
-  incident : Map[(Int, String), Array[ElementAddress]]
-  endpoints : Map[(Int, String), Array[ElementAddress]]
+  nodes : Map[(Int32, String), ElementAddress]
+  edges : Map[(Int32, String), ElementAddress]
+  hyperedges : Map[(Int32, String), ElementAddress]
+  incident : Map[(Int32, String), Array[ElementAddress]]
+  endpoints : Map[(Int32, String), Array[ElementAddress]]
 }
-pub fn GraphIndex::edge(Self, Int, String) -> Edge?
-pub fn GraphIndex::edge_address(Self, Int, String) -> ElementAddress?
+pub fn GraphIndex::edge(Self, Int32, String) -> Edge?
+pub fn GraphIndex::edge_address(Self, Int32, String) -> ElementAddress?
 pub fn GraphIndex::graph_address(Self, String) -> GraphAddress?
-pub fn GraphIndex::hyperedge_address(Self, Int, String) -> ElementAddress?
-pub fn GraphIndex::incident_edges(Self, Int, String) -> Array[ElementAddress]
-pub fn GraphIndex::incident_hyperedges(Self, Int, String) -> Array[ElementAddress]
+pub fn GraphIndex::hyperedge_address(Self, Int32, String) -> ElementAddress?
+pub fn GraphIndex::incident_edges(Self, Int32, String) -> Array[ElementAddress]
+pub fn GraphIndex::incident_hyperedges(Self, Int32, String) -> Array[ElementAddress]
 pub fn GraphIndex::new(Document) -> Self
-pub fn GraphIndex::node(Self, Int, String) -> Node?
-pub fn GraphIndex::node_address(Self, Int, String) -> ElementAddress?
+pub fn GraphIndex::node(Self, Int32, String) -> Node?
+pub fn GraphIndex::node_address(Self, Int32, String) -> ElementAddress?
 
 pub(all) enum GraphStep {
-  NodeGraph(Int)
-  EdgeGraph(Int)
-  HyperedgeGraph(Int)
+  NodeGraph(Int32)
+  EdgeGraph(Int32)
+  HyperedgeGraph(Int32)
 } derive(Eq, @debug.Debug)
 pub fn GraphStep::equal(Self, Self) -> Bool
 pub fn GraphStep::not_equal(Self, Self) -> Bool
@@ -265,8 +302,8 @@ pub fn IdHint::to_repr(Self) -> @debug.Repr
 
 pub(all) struct IndexedEdge {
   id : String?
-  source : Int
-  target : Int
+  source : Int32
+  target : Int32
   direction : Direction
 }
 
@@ -285,18 +322,18 @@ pub(all) struct Key {
 pub fn Key::new(String, Scope, ValueType, name? : String, default_value? : Scalar, description? : String) -> Self raise GraphError
 
 pub(all) struct Limits {
-  input_bytes : Int
-  xml_depth : Int
-  xml_elements : Int
-  attributes_per_element : Int
-  text_bytes : Int
-  keys : Int
-  graphs : Int
-  nodes : Int
-  edges : Int
-  ports : Int
-  endpoints : Int
-  output_bytes : Int
+  input_bytes : Int32
+  xml_depth : Int32
+  xml_elements : Int32
+  attributes_per_element : Int32
+  text_bytes : Int32
+  keys : Int32
+  graphs : Int32
+  nodes : Int32
+  edges : Int32
+  ports : Int32
+  endpoints : Int32
+  output_bytes : Int32
 } derive(Eq, @debug.Debug)
 pub fn Limits::default() -> Self
 pub fn Limits::equal(Self, Self) -> Bool
@@ -313,7 +350,7 @@ pub(all) struct Locator {
 
 pub(all) struct MergeResult {
   document : Document
-  imported_roots : Array[Int]
+  imported_roots : Array[Int32]
   key_mapping : Map[String, String]
   graph_mapping : Map[String, String]
 }
@@ -381,7 +418,7 @@ pub fn ReadProfile::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Scalar {
   BooleanValue(Bool)
-  IntegerValue(Int)
+  IntegerValue(Int32)
   LongValue(Int64)
   FloatValue(Float)
   DoubleValue(Double)
@@ -411,15 +448,15 @@ pub fn Scope::not_equal(Self, Self) -> Bool
 pub fn Scope::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Statistics {
-  keys : Int
-  graphs : Int
-  nodes : Int
-  edges : Int
-  hyperedges : Int
-  endpoints : Int
-  ports : Int
-  data_entries : Int
-  max_graph_depth : Int
+  keys : Int32
+  graphs : Int32
+  nodes : Int32
+  edges : Int32
+  hyperedges : Int32
+  endpoints : Int32
+  ports : Int32
+  data_entries : Int32
+  max_graph_depth : Int32
   has_mixed_direction : Bool
   has_parallel_edges : Bool
   has_self_loops : Bool
