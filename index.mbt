@@ -18,13 +18,13 @@ fn copy_element_address(address : ElementAddress) -> ElementAddress {
 ///|
 /// IDs for nodes/edges are scoped to the top-level graph; graph IDs are document-global.
 pub struct GraphIndex {
-  document : Document
-  graphs : Map[String, GraphAddress]
-  nodes : Map[(Int32, String), ElementAddress]
-  edges : Map[(Int32, String), ElementAddress]
-  hyperedges : Map[(Int32, String), ElementAddress]
-  incident : Map[(Int32, String), Array[ElementAddress]]
-  endpoints : Map[(Int32, String), Array[ElementAddress]]
+  priv document : Document
+  priv graphs : Map[String, GraphAddress]
+  priv nodes : Map[(Int32, String), ElementAddress]
+  priv edges : Map[(Int32, String), ElementAddress]
+  priv hyperedges : Map[(Int32, String), ElementAddress]
+  priv incident : Map[(Int32, String), Array[ElementAddress]]
+  priv endpoints : Map[(Int32, String), Array[ElementAddress]]
 }
 
 ///|

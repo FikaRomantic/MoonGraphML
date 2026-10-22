@@ -33,12 +33,12 @@ pub extend CsrEntry with @debug.Debug::{to_repr}
 /// entries are retained and rows follow original edge order, not sorted columns.
 /// All array accessors return copies; caller mutation cannot corrupt row offsets.
 pub struct CsrAdjacency {
-  node_ids : Array[String]
-  positions : Map[String, Int32]
-  indptr : Array[Int32]
-  indices : Array[Int32]
-  edge_indices : Array[Int32]
-  reversed : Array[Bool]
+  priv node_ids : Array[String]
+  priv positions : Map[String, Int32]
+  priv indptr : Array[Int32]
+  priv indices : Array[Int32]
+  priv edge_indices : Array[Int32]
+  priv reversed : Array[Bool]
 }
 
 ///|

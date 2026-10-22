@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "local/moongraphml"
+package "FikaRomantic/moongraphml"
 
 import {
   "moonbitlang/core/debug",
@@ -28,10 +28,7 @@ pub fn GraphError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
 pub struct Attributes {
-  scope : Scope
-  keys : Array[Key]
-  catalog : Map[String, Key]
-  explicit : Map[String, Datum]
+  // private fields
 }
 pub fn Attributes::contains_explicit(Self, String) -> Bool raise GraphError
 pub fn Attributes::get(Self, String, use_default? : Bool) -> DataValue? raise GraphError
@@ -41,19 +38,14 @@ pub fn Attributes::resolved(Self) -> Array[Datum]
 pub fn Attributes::scalar(Self, String, use_default? : Bool) -> Scalar? raise GraphError
 
 pub struct CountHint {
-  decimal : String
+  // private fields
 }
 pub fn CountHint::decimal(Self) -> String
 pub fn CountHint::parse(String) -> Self raise GraphError
 pub fn CountHint::to_int64(Self) -> Int64?
 
 pub struct CsrAdjacency {
-  node_ids : Array[String]
-  positions : Map[String, Int32]
-  indptr : Array[Int32]
-  indices : Array[Int32]
-  edge_indices : Array[Int32]
-  reversed : Array[Bool]
+  // private fields
 }
 pub fn CsrAdjacency::arc_count(Self) -> Int32
 pub fn CsrAdjacency::edge_indices(Self) -> Array[Int32]
@@ -112,12 +104,7 @@ pub fn Direction::not_equal(Self, Self) -> Bool
 pub fn Direction::to_repr(Self) -> @debug.Repr
 
 pub struct Document {
-  keys : Array[Key]
-  graphs : Array[Graph]
-  data : Array[Datum]
-  description : String?
-  extra : Array[XmlAttributeValue]
-  namespaces : Array[NamespaceBinding]
+  // private fields
 }
 pub fn Document::append_graph(Self, Graph, limits? : Limits) -> Self raise GraphError
 pub fn Document::data(Self) -> Array[Datum]
@@ -201,12 +188,7 @@ pub fn EndpointKind::not_equal(Self, Self) -> Bool
 pub fn EndpointKind::to_repr(Self) -> @debug.Repr
 
 pub struct FlatBuilder {
-  keys : Array[Key]
-  catalog : Map[String, Key]
-  graph : Graph
-  node_ids : Map[String, Bool]
-  edge_ids : Map[String, Bool]
-  limits : Limits
+  // private fields
 }
 pub fn FlatBuilder::add_edge(Self, String, String, id? : String, directed? : Bool, attributes? : Array[(String, Scalar)], description? : String) -> Unit raise GraphError
 pub fn FlatBuilder::add_node(Self, String, attributes? : Array[(String, Scalar)], description? : String) -> Unit raise GraphError
@@ -217,8 +199,7 @@ pub fn FlatBuilder::node_count(Self) -> Int32
 pub fn FlatBuilder::set_graph_data(Self, Array[(String, Scalar)]) -> Unit raise GraphError
 
 pub struct FlatGraph {
-  keys : Array[Key]
-  graph : Graph
+  // private fields
 }
 pub fn FlatGraph::edge_rows(Self, use_defaults? : Bool) -> Array[EdgeRow] raise GraphError
 pub fn FlatGraph::graph(Self) -> Graph
@@ -254,13 +235,7 @@ pub fn GraphAddress::root(Int32) -> Self
 pub fn GraphAddress::to_repr(Self) -> @debug.Repr
 
 pub struct GraphIndex {
-  document : Document
-  graphs : Map[String, GraphAddress]
-  nodes : Map[(Int32, String), ElementAddress]
-  edges : Map[(Int32, String), ElementAddress]
-  hyperedges : Map[(Int32, String), ElementAddress]
-  incident : Map[(Int32, String), Array[ElementAddress]]
-  endpoints : Map[(Int32, String), Array[ElementAddress]]
+  // private fields
 }
 pub fn GraphIndex::edge(Self, Int32, String) -> Edge?
 pub fn GraphIndex::edge_address(Self, Int32, String) -> ElementAddress?

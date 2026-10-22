@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Install MoonBit
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
@@ -23,6 +24,8 @@ jobs:
         run: |
           moon version --all
           moon update
+      - name: History identity and publication hygiene
+        run: python scripts/release_guard.py --release
       - name: Check all targets
         run: moon check --target all --deny-warn
       - name: Build all targets

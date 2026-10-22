@@ -1,7 +1,7 @@
 # MoonGraphML API guide
 
 This guide describes the source API under the current local namespace
-`local/moongraphml`, imported as `@graphml`. Run `moon info` to regenerate the
+`FikaRomantic/moongraphml`, imported as `@graphml`. Run `moon info` to regenerate the
 compiler's precise public interface when the API changes.
 
 ## Reading, writing, and errors

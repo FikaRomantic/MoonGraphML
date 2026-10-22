@@ -1,8 +1,8 @@
 ///|
 /// A lossless view of a single non-hierarchical binary graph.
 pub struct FlatGraph {
-  keys : Array[Key]
-  graph : Graph
+  priv keys : Array[Key]
+  priv graph : Graph
 }
 
 ///|

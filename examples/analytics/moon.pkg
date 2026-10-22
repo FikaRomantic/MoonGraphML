@@ -1,5 +1,5 @@
 import {
-  "local/moongraphml" @graphml,
+  "FikaRomantic/moongraphml" @graphml,
 }
 
 pkgtype(kind: "executable")

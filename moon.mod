@@ -1,10 +1,12 @@
-name = "local/moongraphml"
+name = "FikaRomantic/moongraphml"
 
 version = "0.1.0"
 
 license = "MIT"
 
 readme = "README.md"
+
+repository = "https://github.com/FikaRomantic/MoonGraphML"
 
 description = "Typed, bounded GraphML graph interchange for MoonBit"
 

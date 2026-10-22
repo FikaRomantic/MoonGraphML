@@ -265,12 +265,12 @@ pub fn Endpoint::new(
 
 ///|
 pub struct Document {
-  keys : Array[Key]
-  graphs : Array[Graph]
-  data : Array[Datum]
-  description : String?
-  extra : Array[XmlAttributeValue]
-  namespaces : Array[NamespaceBinding]
+  priv keys : Array[Key]
+  priv graphs : Array[Graph]
+  priv data : Array[Datum]
+  priv description : String?
+  priv extra : Array[XmlAttributeValue]
+  priv namespaces : Array[NamespaceBinding]
 }
 
 ///|

@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased local-readiness work
+## 0.1.0 — 2026-10-22
+
+- Publish the original MoonBit implementation under FikaRomantic/moongraphml,
+  with repository and maintenance history owned by FikaRomantic.
+- Make owned wrapper representations explicitly private, preventing external
+  mutation through readonly struct fields; raw construction records remain public.
 
 - Add owned node-induced subgraph extraction, preserving XML/default metadata,
   original ordering and multigraph semantics while clearing stale parse hints.
@@ -19,7 +24,7 @@
   reject malformed Unicode in standalone scalar parsing.
 - Add public API pipeline regressions and offline package/history safeguards.
 
-## 0.1.0 — local development, unreleased
+### Initial implementation
 
 - Added bounded namespace-aware GraphML import/export and typed scalar keys,
   defaults, scoped attributes, and structured errors.
@@ -43,5 +48,5 @@
 - Documented development-only schema/XPath/reference-tool dependencies without
   making them MoonBit runtime dependencies or copying their implementations.
 
-The local namespace remains `local/moongraphml`; no remote repository,
+The local namespace remains `FikaRomantic/moongraphml`; no remote repository,
 Mooncakes publication, or remotely successful CI run is implied by this entry.

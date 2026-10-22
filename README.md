@@ -5,10 +5,14 @@ and write graph documents with typed attributes and explicit resource limits.
 It connects MoonBit applications to existing graph-data workflows without
 reimplementing graph algorithms or visual layout.
 
-The current module name is `local/moongraphml`, version `0.1.0`. This is a local
-development namespace, **not a published Mooncakes package**. The publishing
-account has intentionally not been assigned; no public repository or package
-installation URL is claimed here.
+Module: `FikaRomantic/moongraphml`, version `0.1.0`.
+Source: [FikaRomantic/MoonGraphML](https://github.com/FikaRomantic/MoonGraphML).
+Repository owner, maintenance commit identity and publishing account:
+`FikaRomantic`.
+
+```sh
+moon add FikaRomantic/moongraphml@0.1.0
+```
 
 ## Where it fits
 
@@ -30,6 +34,11 @@ Owned documents, address/ID indexes, typed table views, batch construction,
 reference-aware renaming, graph replacement/selection, node-induced subgraph
 extraction, document merging, and edge-mapped CSR adjacency exports are
 available through the [API guide](docs/API.md).
+
+Owned readonly wrappers (`Document`, `FlatGraph`, `GraphIndex`, `Attributes`,
+`CsrAdjacency` and builders) keep their representation private. Use their
+public methods rather than accessing fields; returned graph/array views are
+detached. The explicit `pub(all)` raw construction records remain editable.
 
 Custom XML attribute data preserves expanded names (namespace URI plus local
 name), attributes, text, payload-element prefixes, and in-scope namespace
@@ -103,11 +112,11 @@ and defaults without merging parallel relationships. Each example has assertions
 
 ## Library usage
 
-For a package inside this checkout, import the local module in `moon.pkg`:
+Import the module in your consuming package's `moon.pkg`:
 
 ```moonbit
 import {
-  "local/moongraphml" @graphml,
+  "FikaRomantic/moongraphml" @graphml,
 }
 ```
 
@@ -214,12 +223,12 @@ Formatting and public-interface consistency can be checked with `moon fmt` and
 `moon info`, followed by `git diff --exit-code`. The included CI installs the
 current stable toolchain, checks/builds/tests all targets with warnings denied,
 checks formatting/interfaces, and runs the four examples and CLI smoke tests.
-The workflow is configured; a successful remote run is a separate release gate.
+Release gates also verify report-free history and consistent maintainer identity.
 `python scripts/package_qa.py` packages with `moon package --frozen`, checks the
 archive's exclusions, and runs an isolated build/test/examples check without
 publishing. `python scripts/release_guard.py` checks source scale, nonempty
-history, and report/cache exclusions. Its `--release` mode deliberately refuses
-the placeholder publishing owner. Do not use `moon publish --dry-run` as an
+history, and report/cache exclusions. Its `--release` mode additionally checks
+the real namespace, repository and all author/committer identities. Do not use `moon publish --dry-run` as an
 offline package test: publication is an explicit later operation.
 
 The original GraphML implementation is [MIT licensed](LICENSE).

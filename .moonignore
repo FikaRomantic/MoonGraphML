@@ -20,3 +20,13 @@ docs/adr/
 *proposal*
 scripts/
 .github/
+__pycache__/
+*.pyc
+*.log
+*测试输出*
+*ai-test-output*
+*test-results*.json
+*test-output*.json
+*ai_report*
+*-results.json
+*_results.json

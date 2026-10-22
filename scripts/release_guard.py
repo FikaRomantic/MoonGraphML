@@ -1,4 +1,4 @@
-"""Read-only release/history hygiene gate. Reports and identities are never rewritten."""
+"""Read-only release/history hygiene gate; identity migration is a separate action."""
 from __future__ import annotations
 
 import argparse
@@ -12,6 +12,7 @@ FORBIDDEN = (
     ".local/", "_build/", "target/", ".mooncakes/", "docs/adr/", "context.md",
     "申报", "审查", "验收记录", "汇总", "ai辅助", "ai-report", "review-report",
     "acceptance-report", "research-report", "summary-report", "proposal", "研究报告", "调研报告",
+    "ai测试", "ai_test", "ai-test-output", "test-output", "test-results", "测试输出",
 )
 
 
@@ -23,7 +24,10 @@ def git(*args):
 
 def forbidden(path):
     path = path.replace("\\", "/").lower()
-    return any(marker in path for marker in FORBIDDEN)
+    name = path.rsplit("/", 1)[-1]
+    return (any(marker in path for marker in FORBIDDEN)
+            or name.endswith((".log", ".pyc", "-results.json", "_results.json"))
+            or "__pycache__" in path.split("/"))
 
 
 def require(condition, message):
@@ -97,6 +101,11 @@ def main():
         require(re.search(r'^repository\s*=\s*"https://github\.com/[^\"]+"', module, re.M) is not None,
                 "missing real public GitHub repository URL")
         require(bool(git("remote").strip()), "missing public repository remote")
+        expected = f"{owner} <346264193+{owner}@users.noreply.github.com>"
+        identities = git("log", "--all", "--format=%an <%ae>|%cn <%ce>").splitlines()
+        require(owner == "FikaRomantic", "unexpected publishing owner")
+        require(all(item == f"{expected}|{expected}" for item in identities),
+                "all reachable author/committer identities must match publishing owner")
     print(f"PASS: report-free Git history, {len(commits)} nonempty commits, {files} core files, {lines} effective lines")
     if owner == "local":
         print("PENDING: account intentionally blank; this is a local-readiness result, not publication or contest acceptance")

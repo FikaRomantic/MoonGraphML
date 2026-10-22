@@ -1,5 +1,5 @@
 import {
-  "local/moongraphml" @gml,
+  "FikaRomantic/moongraphml" @gml,
   "moonbitlang/x/fs",
   "moonbitlang/x/sys",
   "moonbitlang/core/env",

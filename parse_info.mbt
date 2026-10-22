@@ -1,7 +1,7 @@
 ///|
 /// XML Schema nonNegativeInteger has no machine-word upper bound.
 pub struct CountHint {
-  decimal : String
+  priv decimal : String
 }
 
 ///|

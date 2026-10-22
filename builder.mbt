@@ -2,12 +2,12 @@
 /// Batch construction avoids repeatedly revalidating the entire graph for each addition.
 /// Forward node references are permitted; finish() validates them before producing a document.
 pub struct FlatBuilder {
-  keys : Array[Key]
-  catalog : Map[String, Key]
-  graph : Graph
-  node_ids : Map[String, Bool]
-  edge_ids : Map[String, Bool]
-  limits : Limits
+  priv keys : Array[Key]
+  priv catalog : Map[String, Key]
+  priv graph : Graph
+  priv node_ids : Map[String, Bool]
+  priv edge_ids : Map[String, Bool]
+  priv limits : Limits
 }
 
 ///|

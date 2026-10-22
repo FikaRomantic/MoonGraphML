@@ -1,10 +1,10 @@
 ///|
 /// A scoped, owned view of explicit attributes and key defaults.
 pub struct Attributes {
-  scope : Scope
-  keys : Array[Key]
-  catalog : Map[String, Key]
-  explicit : Map[String, Datum]
+  priv scope : Scope
+  priv keys : Array[Key]
+  priv catalog : Map[String, Key]
+  priv explicit : Map[String, Datum]
 }
 
 ///|
