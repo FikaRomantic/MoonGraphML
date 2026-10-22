@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -15,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import xml.etree.ElementTree as ET
 import zipfile
 
 from release_guard import forbidden
@@ -49,7 +51,13 @@ def main() -> int:
         packaged = invoke(["package", "--frozen"], ROOT)
         match = re.search(r"^Package to (.+)$", packaged.stdout + packaged.stderr, re.MULTILINE)
         require(match is not None, "moon did not report a generated package path")
-        archive = Path(match.group(1).strip()).resolve(strict=True)
+        reported_path = match.group(1).strip()
+        # 2026-10-16 moon reports an extended Windows drive path. Normalize the
+        # spelling before the same strict containment check; never relax the
+        # permitted output directory or accept a different drive/share.
+        if os.name == "nt" and re.match(r"^\\\\\?\\[A-Za-z]:\\", reported_path):
+            reported_path = reported_path[4:]
+        archive = Path(reported_path).resolve(strict=True)
         require(archive.is_relative_to((ROOT / "_build" / "publish").resolve()),
                 "archive is outside the intended generated-package directory")
         report["archive"] = {"path": str(archive), "bytes": archive.stat().st_size,
@@ -81,7 +89,8 @@ def main() -> int:
                     files.append(name)
             for required in ("moon.mod", "moon.pkg", "README.md", "LICENSE",
                              "cmd/graphml/main.mbt", "examples/dependencies/main.mbt",
-                             "examples/topology/main.mbt", "examples/datasets/main.mbt"):
+                             "examples/topology/main.mbt", "examples/datasets/main.mbt",
+                             "examples/analytics/main.mbt", "csr.mbt", "subgraph.mbt"):
                 require(required in files, f"missing deliverable in package: {required}")
             require(any(name.endswith("_test.mbt") for name in files), "missing public API tests in package")
             package.extractall(extracted)
@@ -92,13 +101,27 @@ def main() -> int:
         # --frozen means the isolated build uses only the already resolved cache.
         for command in ("check", "build", "test"):
             invoke([command, "--frozen", "--deny-warn", "--target", "all"], extracted)
-        for example in ("dependencies", "topology", "datasets"):
+        for example in ("dependencies", "topology", "datasets", "analytics"):
             invoke(["run", f"examples/{example}", "--frozen", "--deny-warn", "--target", "native"], extracted)
         invoke(["run", "cmd/graphml", "--frozen", "--deny-warn", "--target", "native", "--",
                 "verify", "tests/fixtures/flat.graphml"], extracted)
+        for command in ("csr", "csr-incoming"):
+            result = invoke(["run", "cmd/graphml", "--frozen", "--deny-warn", "--target", "native", "--",
+                             command, "tests/fixtures/flat.graphml"], extracted)
+            payload = json.loads(result.stdout)
+            require(payload["node_ids"] == ["a", "b"] and payload["edge_indices"] == [0],
+                    "packaged CSR CLI returned incorrect node/edge mapping")
+            require(payload["indptr"] == ([0, 1, 1] if command == "csr" else [0, 0, 1]),
+                    "packaged CSR CLI returned incorrect row offsets")
+        result = invoke(["run", "cmd/graphml", "--frozen", "--deny-warn", "--target", "native", "--",
+                         "subgraph", "tests/fixtures/flat.graphml", "a"], extracted)
+        graph = ET.fromstring(result.stdout).find("{http://graphml.graphdrawing.org/xmlns}graph")
+        require(graph is not None and len(graph.findall("{http://graphml.graphdrawing.org/xmlns}node")) == 1
+                and not graph.findall("{http://graphml.graphdrawing.org/xmlns}edge"),
+                "packaged subgraph CLI returned incorrect induced graph")
         report["passed"] = True
         RESULTS.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"PASS: {len(files)} report-free packaged files; isolated check/build/test, three examples and CLI passed")
+        print(f"PASS: {len(files)} report-free packaged files; isolated check/build/test, four examples and CLI adapters passed")
         print(f"LOCAL ONLY: no publication attempted; evidence in {RESULTS}")
         return 0
     except Exception as error:

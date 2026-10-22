@@ -27,7 +27,8 @@ directed/undirected/mixed binary edges, parallel edges, self-loops, hierarchical
 graphs, hierarchical ports, and hyperedge endpoints. It validates identifiers,
 key scopes/types, references, child ordering, and configured resource budgets.
 Owned documents, address/ID indexes, typed table views, batch construction,
-reference-aware renaming, graph replacement/selection, and document merging are
+reference-aware renaming, graph replacement/selection, node-induced subgraph
+extraction, document merging, and edge-mapped CSR adjacency exports are
 available through the [API guide](docs/API.md).
 
 Custom XML attribute data preserves expanded names (namespace URI plus local
@@ -65,18 +66,40 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 ```
 
-Three executable examples exercise different workflows:
+This revision is tested with `moonc v0.10.16+b1a0e846e` and the 2026-10-16
+`moon`/`moonrun`. On Windows, that particular driver/compiler pair can fail
+on generated `\\?\` output paths before checking project code. A project-local
+adapter normalizes only extended drive-path arguments and still invokes the
+installed 0.10.16 compiler; it does not modify the toolchain or dependencies:
+
+```powershell
+pwsh -NoProfile -File scripts/Invoke-Moon016.ps1 check --target all --deny-warn --frozen
+pwsh -NoProfile -File scripts/Invoke-Moon016.ps1 build --target all --deny-warn --frozen
+pwsh -NoProfile -File scripts/Invoke-Moon016.ps1 test --target all --deny-warn --frozen
+pwsh -NoProfile -File scripts/Invoke-Moon016.ps1 fmt
+```
+
+The same normalization is applied to `moonfmt` when formatting. The adapter
+requires Windows .NET Framework's C# compiler and is restricted to
+0.10.16. Use normal commands on unaffected toolchains; `--frozen` additionally
+requires dependencies already resolved by `moon update`. The adapter and all
+generated files remain development-only and are excluded from the Moon package.
+
+Four executable examples exercise different workflows:
 
 ```sh
 moon run --target native --deny-warn examples/dependencies
 moon run --target native --deny-warn examples/topology
 moon run --target native --deny-warn examples/datasets
+moon run --target native --deny-warn examples/analytics
 ```
 
 `dependencies` builds a service graph, checks import/export equivalence, and
 looks up an incident edge. `topology` renames a port while updating binary-edge
 and hyperedge references. `datasets` resolves typed defaults into rows and
-merges separately scoped graph documents. Each example includes assertions.
+merges separately scoped graph documents. `analytics` extracts a service subset,
+exports outgoing/incoming CSR, and joins edge ordinals to exact Int64 weights
+and defaults without merging parallel relationships. Each example has assertions.
 
 ## Library usage
 
@@ -111,6 +134,33 @@ and use its variants or `message()` to report invalid data, unsupported
 projections, and exceeded budgets. Defaults remain declarations until requested
 through `Attributes` or a typed row view; they are not silently materialized.
 
+## Selecting graph data and exporting adjacency
+
+```moonbit
+let flat = try! document.flat_graph(@graphml.GraphAddress::root(0))
+let selected = try! flat.induced_subgraph(["api", "database"])
+let selected_flat = try! selected.flat_graph(@graphml.GraphAddress::root(0))
+let csr = try! selected_flat.to_csr(orientation=@graphml.Incoming)
+let database = csr.node_index("database").unwrap()
+let dependencies = try! csr.row(database)
+```
+
+Induced extraction keeps source order and every edge with both endpoints selected,
+including loops and parallel edges. It preserves keys/defaults, graph/node/edge
+attributes and XML contexts; unknown or duplicate selections are errors. Stale
+unqualified `parse.*` hints are removed from the graph and selected nodes. This
+selected-graph operation does not include document-root metadata or rewrite
+application references embedded in opaque XML.
+
+CSR uses `indptr`/`indices` plus `node_ids`, `edge_indices` and `reversed` mapping
+arrays. Parallel entries are retained, not summed; rows follow original edge
+order, so columns are not necessarily sorted. Undirected non-loops emit two
+arcs, undirected loops one. `Incoming` reverses directed arcs. Join original edge
+attributes by `edge_indices`, rather than coercing all weights to floating point.
+`max_arcs` defaults to 2,000,000 and is checked before arc-buffer allocation.
+Both features require an existing lossless `FlatGraph` view and do not silently
+flatten advanced structures. See [precise contracts and costs](docs/API.md).
+
 ## Command-line tool
 
 The CLI reads UTF-8 GraphML files. `roundtrip`, `inspect`, and `verify` use the
@@ -122,6 +172,9 @@ moon run --target native --deny-warn cmd/graphml -- verify tests/fixtures/flat.g
 moon run --target native --deny-warn cmd/graphml -- roundtrip tests/fixtures/flat.graphml
 moon run --target native --deny-warn cmd/graphml -- roundtrip-compatible tests/fixtures/flat.graphml
 moon run --target native --deny-warn cmd/graphml -- generate 7
+moon run --target native --deny-warn cmd/graphml -- subgraph tests/fixtures/flat.graphml a b
+moon run --target native --deny-warn cmd/graphml -- csr tests/fixtures/flat.graphml
+moon run --target native --deny-warn cmd/graphml -- csr-incoming tests/fixtures/flat.graphml
 ```
 
 `inspect` prints stored counts and structural flags. `verify` checks
@@ -132,6 +185,10 @@ structure checks. `generate` emits a deterministic test graph for an integer
 seed. Usage errors exit with code 2; file, validation, and conversion errors exit
 with code 1. Errors currently print to standard output, so check the exit code
 before treating captured output as XML.
+
+`subgraph INPUT [NODE_ID ...]` emits GraphML (no IDs means an empty graph).
+`csr`/`csr-incoming` emit JSON mapping arrays. These commands require exactly one
+root graph and a supported flat structure; they refuse ambiguous/lossy input.
 
 ## Interoperability
 
@@ -145,12 +202,18 @@ reference-library metadata are treated according to the stated comparison
 profile. Details and reproduction commands are in
 [COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
+The additional adapter suite passed 100 induced-subgraph comparisons with
+NetworkX 3.6.1, 400 outgoing/incoming CSR checks against an independent XML
+endpoint scan (including mixed direction), and 9 CLI rejection checks:
+`python scripts/adapters_interop.py` after a native CLI build. It uses the same
+development dependencies as the main differential suite, not SciPy at runtime.
+
 ## Development and licensing
 
 Formatting and public-interface consistency can be checked with `moon fmt` and
 `moon info`, followed by `git diff --exit-code`. The included CI installs the
 current stable toolchain, checks/builds/tests all targets with warnings denied,
-checks formatting/interfaces, and runs the three examples and a CLI smoke test.
+checks formatting/interfaces, and runs the four examples and CLI smoke tests.
 The workflow is configured; a successful remote run is a separate release gate.
 `python scripts/package_qa.py` packages with `moon package --frozen`, checks the
 archive's exclusions, and runs an isolated build/test/examples check without

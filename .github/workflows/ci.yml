@@ -40,7 +40,11 @@ jobs:
           moon run --target native --deny-warn examples/dependencies
           moon run --target native --deny-warn examples/topology
           moon run --target native --deny-warn examples/datasets
+          moon run --target native --deny-warn examples/analytics
       - name: CLI smoke test
         run: |
           moon run --target native --deny-warn cmd/graphml -- inspect tests/fixtures/flat.graphml
           moon run --target native --deny-warn cmd/graphml -- verify tests/fixtures/flat.graphml
+          moon run --target native --deny-warn cmd/graphml -- subgraph tests/fixtures/flat.graphml a b
+          moon run --target native --deny-warn cmd/graphml -- csr tests/fixtures/flat.graphml
+          moon run --target native --deny-warn cmd/graphml -- csr-incoming tests/fixtures/flat.graphml

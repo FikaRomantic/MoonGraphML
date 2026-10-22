@@ -193,6 +193,80 @@ such values, its context takes priority; appended graphs retain their own
 contexts. References embedded
 in opaque XML or locator text are not interpreted or rewritten.
 
+## Induced subgraphs
+
+`FlatGraph::induced_subgraph(node_ids, limits?) -> Document` extracts a node-induced
+copy: exactly the selected vertices and all binary edges whose two endpoints are
+selected. It retains source node/edge order, not selection order, including
+isolates, self-loops, parallel edges, and per-edge direction overrides. Empty
+selection produces a valid empty graph. Unknown or repeated selections raise
+`InvalidGraph` at `subgraph.nodes`. No node/edge identifiers are renumbered.
+
+Keys, defaults (including unused declarations), graph description/data, authored
+node/edge data and XML attributes/namespace contexts are retained. All
+unqualified `parse.*` graph/node hints are removed because counts, degrees,
+canonical ordinal IDs and ordering assumptions can become stale. Namespaced
+extension attributes are retained even with similar local names. The original
+document is unchanged; the returned document is fully validated and detached.
+Document-root metadata is outside this `FlatGraph` selection, just as with
+`to_document()`. Embedded application references in XML/extra attributes are
+opaque: they are not rewritten or guaranteed to refer to retained nodes; callers
+with such schemas must validate the extracted result themselves.
+
+The structural selection costs expected `O(V+E+Q)` time for `Q` selected IDs and
+`O(Q+V'+E')` working space, using hash membership instead of testing every ID
+against every vertex/edge. This is followed by the normal whole-result
+validation, serialization and ownership reparse, whose cost includes metadata,
+keys and namespace contexts. `Limits` applies to the resulting document, not as
+a smaller new limit on the source; node/edge ceilings are also checked before
+growing selected arrays. Unsupported hierarchy/ports/hyperedges/locators are
+already rejected by `Document::flat_graph`, not silently discarded here.
+
+## CSR adjacency adapter
+
+`FlatGraph::to_csr(orientation?=Outgoing, max_arcs?=2000000) -> CsrAdjacency`
+produces an immutable compressed sparse row topology adapter. Node ordinals
+follow `FlatGraph::graph().nodes`; edge ordinals follow its `.edges`. It does not
+run graph algorithms, perform numerical aggregation, or infer weight types.
+
+- `node_count()`, `arc_count()`: stored vertices and adjacency entries.
+- `node_index(id)`: expected constant-time lookup, `None` for absent IDs.
+- `node_ids()`, `indptr()`, `indices()`, `edge_indices()`, `reversed()`: detached
+  arrays. Row `i` occupies `[indptr[i], indptr[i+1])`; `indices` are target node
+  ordinals, and each `edge_indices` entry maps to the original edge record.
+- `row(i)`: a detached array of `CsrEntry {target, edge_index, reversed}` in
+  `O(degree(i))` time. Invalid/negative indices raise `InvalidGraph` at `csr.row`.
+
+Outgoing directed edges emit source-to-target; Incoming emits target-to-source
+and sets `reversed=true`, including directed self-loops. Undirected non-loops
+emit one arc per endpoint (forward then reversed); undirected self-loops emit
+one forward arc in either mode. This is adjacency storage, **not** an incidence
+degree count that counts undirected loops twice. Each row follows original edge
+order. Parallel entries are retained and column indices need not be sorted;
+these are valid noncanonical CSR arrays, not a canonical sparse matrix.
+
+Read scalar/Int64/default/XML edge values from the original flat graph or its
+typed rows using edge ordinals. A numerical consumer must explicitly choose
+weight conversion and parallel-edge aggregation rules; do not blindly treat
+edge ordinals as numerical weights. `row()`/array getters cannot modify the
+stored adapter. Topology export does not copy XML payloads or coerce values.
+
+Construction uses degree counting, prefix sums and stable scatter: expected
+`O(V+E)` time and `O(V+A)` space (`A<=2E`), versus scanning all edges per row
+(`O(V*E)`) or allocating a dense `V*V` matrix. The arc count is preflighted
+before any arc buffers are allocated; a negative budget is `InvalidGraph` at
+`csr.max_arcs`, exceeding it is `LimitExceeded(resource="csr.arcs")`. Explicit
+subtraction guards prevent overflow during counting, and `V+1` is checked.
+Budgets are not host-process memory guarantees. Hashing costs depend on ID
+lengths. Full array getters copy `O(V)` or `O(A)` values; prefer `row()` when only
+one adjacency list is needed.
+
+CSR convention reference: [SciPy CSR representation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html).
+Induced-selection definition: [NetworkX MultiDiGraph.subgraph](https://networkx.org/documentation/stable/reference/classes/generated/networkx.MultiDiGraph.subgraph.html).
+These are design/format references, not copied implementations or runtime
+dependencies. In contrast to NetworkX views, MoonGraphML returns an owned copy
+and deliberately rejects unknown/duplicate selection IDs.
+
 ## Equivalence, statistics, and parse hints
 
 `Document::equivalent(other)` compares the supported information model, ignoring

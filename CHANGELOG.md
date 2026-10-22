@@ -2,6 +2,14 @@
 
 ## Unreleased local-readiness work
 
+- Add owned node-induced subgraph extraction, preserving XML/default metadata,
+  original ordering and multigraph semantics while clearing stale parse hints.
+- Add outgoing/incoming CSR adjacency with detached arrays, original edge
+  ordinal/reversal mappings, stable multiedge storage and preflight arc budgets.
+- Add subgraph/CSR CLI commands, an analytics workflow example, public adapter
+  regressions and independent NetworkX/XML-endpoint differential checks.
+- Verify with moonc 0.10.16; add an optional development-only Windows argument
+  adapter for the 2026-10-16 extended-output-path compiler regression.
 - Preserve namespace context for all GraphML containers, including QName-only
   bindings on core `xsi:type`, as well as payload/default wrappers.
 - Reject ambiguous root-context merges without rewriting opaque values.
