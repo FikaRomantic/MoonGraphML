@@ -1,0 +1,5 @@
+import {
+  "FikaRomantic/moongraphml" @g,
+}
+
+pkgtype(kind: "executable")

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- 原子节点重命名与边子图抽取，含资源边界、回归测试及 `examples/selection`。
+- CI 显式验证 moonc >= 0.10.16，并运行新增示例。
+
 ## 0.1.0 — 2026-10-22
 
 - Publish the original MoonBit implementation under FikaRomantic/moongraphml,

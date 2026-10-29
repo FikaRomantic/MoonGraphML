@@ -26,6 +26,10 @@ jobs:
           moon update
       - name: History identity and publication hygiene
         run: python scripts/release_guard.py --release
+      - name: Minimum compiler version
+        run: python tools/verify_toolchain.py
+      - name: Run extension scenario
+        run: moon run examples/selection --target wasm-gc --deny-warn
       - name: Check all targets
         run: moon check --target all --deny-warn
       - name: Build all targets

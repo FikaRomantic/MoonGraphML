@@ -122,6 +122,7 @@ pub fn Document::merge(Self, Self, String, limits? : Limits) -> MergeResult rais
 pub fn Document::namespace_bindings(Self) -> Array[NamespaceBinding]
 pub fn Document::new(Array[Key], Array[Graph], data? : Array[Datum], description? : String, extra? : Array[XmlAttributeValue], namespaces? : Array[NamespaceBinding], limits? : Limits) -> Self raise GraphError
 pub fn Document::node_at(Self, ElementAddress) -> Node raise GraphError
+pub fn Document::relabel_nodes(Self, Int32, Array[(String, String)], limits? : Limits) -> Self raise GraphError
 pub fn Document::remove_key(Self, String, limits? : Limits) -> Self raise GraphError
 pub fn Document::rename_key(Self, String, String, limits? : Limits) -> Self raise GraphError
 pub fn Document::rename_node(Self, Int32, String, String, limits? : Limits) -> Self raise GraphError
@@ -202,6 +203,7 @@ pub struct FlatGraph {
   // private fields
 }
 pub fn FlatGraph::edge_rows(Self, use_defaults? : Bool) -> Array[EdgeRow] raise GraphError
+pub fn FlatGraph::edge_subgraph(Self, Array[Int32], keep_isolated? : Bool, limits? : Limits) -> Document raise GraphError
 pub fn FlatGraph::graph(Self) -> Graph
 pub fn FlatGraph::indexed_edges(Self) -> Array[IndexedEdge]
 pub fn FlatGraph::induced_subgraph(Self, Array[String], limits? : Limits) -> Document raise GraphError

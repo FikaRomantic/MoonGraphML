@@ -238,3 +238,14 @@ Both dependencies are Apache-2.0. NetworkX, igraph, lxml, xmlschema, elementpath
 and texttable are independent development tools or their dependencies, not
 copied implementations or MoonBit runtime dependencies. See
 [third-party notices](THIRD_PARTY_NOTICES.md) and [changes](CHANGELOG.md).
+
+## Source-workspace extensions (unreleased)
+
+Compiler requirement: **moonc >= 0.10.16**. See
+[the API, scope and complexity notes](docs/FEATURE_EXTENSIONS.md) for **原子节点重命名与边子图抽取**.
+These additions are available in this source tree; the previously published package
+version does not yet contain them. Run the assertion-based example from the repository:
+
+```sh
+moon run examples/selection --target wasm-gc --deny-warn
+```
