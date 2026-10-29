@@ -5,13 +5,24 @@ and write graph documents with typed attributes and explicit resource limits.
 It connects MoonBit applications to existing graph-data workflows without
 reimplementing graph algorithms or visual layout.
 
-Module: `FikaRomantic/moongraphml`, version `0.1.0`.
+Module: `FikaRomantic/moongraphml`, version `0.2.0`.
 Source: [FikaRomantic/MoonGraphML](https://github.com/FikaRomantic/MoonGraphML).
 Repository owner, maintenance commit identity and publishing account:
 `FikaRomantic`.
 
 ```sh
-moon add FikaRomantic/moongraphml@0.1.0
+moon add FikaRomantic/moongraphml@0.2.0
+```
+
+## New in 0.2.0
+
+- `Document::relabel_nodes` atomically renames a batch of node IDs, including swaps and cycles, while preserving structural edge and hyperedge references.
+- `FlatGraph::edge_subgraph` selects edges by source ordinal, retaining individual anonymous/parallel edges and optionally isolated nodes.
+
+Requires **moonc >= 0.10.16**. Relabeling does not interpret opaque XML business references; edge selection follows the existing flat-graph scope. See the [API, limits and complexity notes](docs/FEATURE_EXTENSIONS.md).
+
+```sh
+moon run examples/selection --target wasm-gc --deny-warn
 ```
 
 ## Where it fits
@@ -94,13 +105,14 @@ requires Windows .NET Framework's C# compiler and is restricted to
 requires dependencies already resolved by `moon update`. The adapter and all
 generated files remain development-only and are excluded from the Moon package.
 
-Four executable examples exercise different workflows:
+Five executable examples exercise different workflows:
 
 ```sh
 moon run --target native --deny-warn examples/dependencies
 moon run --target native --deny-warn examples/topology
 moon run --target native --deny-warn examples/datasets
 moon run --target native --deny-warn examples/analytics
+moon run --target native --deny-warn examples/selection
 ```
 
 `dependencies` builds a service graph, checks import/export equivalence, and
@@ -222,7 +234,7 @@ development dependencies as the main differential suite, not SciPy at runtime.
 Formatting and public-interface consistency can be checked with `moon fmt` and
 `moon info`, followed by `git diff --exit-code`. The included CI installs the
 current stable toolchain, checks/builds/tests all targets with warnings denied,
-checks formatting/interfaces, and runs the four examples and CLI smoke tests.
+checks formatting/interfaces, and runs the five examples and CLI smoke tests.
 Release gates also verify report-free history and consistent maintainer identity.
 `python scripts/package_qa.py` packages with `moon package --frozen`, checks the
 archive's exclusions, and runs an isolated build/test/examples check without
@@ -238,14 +250,3 @@ Both dependencies are Apache-2.0. NetworkX, igraph, lxml, xmlschema, elementpath
 and texttable are independent development tools or their dependencies, not
 copied implementations or MoonBit runtime dependencies. See
 [third-party notices](THIRD_PARTY_NOTICES.md) and [changes](CHANGELOG.md).
-
-## Source-workspace extensions (unreleased)
-
-Compiler requirement: **moonc >= 0.10.16**. See
-[the API, scope and complexity notes](docs/FEATURE_EXTENSIONS.md) for **原子节点重命名与边子图抽取**.
-These additions are available in this source tree; the previously published package
-version does not yet contain them. Run the assertion-based example from the repository:
-
-```sh
-moon run examples/selection --target wasm-gc --deny-warn
-```

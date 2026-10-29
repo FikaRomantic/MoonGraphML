@@ -43,7 +43,8 @@ moon run examples/selection --target wasm-gc --deny-warn
 moon run examples/selection --target native --deny-warn
 ```
 
-Windows 如遇 OCaml 扩展路径问题，使用仓库提供的 `tools/windows/moon.ps1`
-代替 `moon`；没有该脚本的仓库建议在 Linux/WSL 环境运行上述命令。
-这些是源码工作区新增 API，现有已发布版本号未变；发布新版本后才可从 Mooncakes
-安装取得这些新增功能。全部示例为可运行断言，不代表已有生产部署。
+Windows 源码开发如遇官方 0.10.16 扩展路径问题，可使用仓库的
+`scripts/Invoke-Moon016.ps1`，参见 README；该工具仅用于受影响的工具链。
+
+以上 API 从 **0.2.0** 起提供：`moon add FikaRomantic/moongraphml@0.2.0`。
+全部示例为可运行断言，不代表已有生产部署。

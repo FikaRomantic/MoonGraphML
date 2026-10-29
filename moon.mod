@@ -1,6 +1,6 @@
 name = "FikaRomantic/moongraphml"
 
-version = "0.1.0"
+version = "0.2.0"
 
 license = "MIT"
 
@@ -8,7 +8,7 @@ readme = "README.md"
 
 repository = "https://github.com/FikaRomantic/MoonGraphML"
 
-description = "Typed, bounded GraphML graph interchange for MoonBit"
+description = "Typed, bounded GraphML interchange with atomic relabeling and edge subgraphs"
 
 keywords = [ "graphml", "graph", "interchange", "xml", "data" ]
 

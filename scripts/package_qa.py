@@ -90,7 +90,8 @@ def main() -> int:
             for required in ("moon.mod", "moon.pkg", "README.md", "LICENSE",
                              "cmd/graphml/main.mbt", "examples/dependencies/main.mbt",
                              "examples/topology/main.mbt", "examples/datasets/main.mbt",
-                             "examples/analytics/main.mbt", "csr.mbt", "subgraph.mbt"):
+                             "examples/analytics/main.mbt", "examples/selection/main.mbt",
+                             "batch_relabel.mbt", "edge_subgraph.mbt", "csr.mbt", "subgraph.mbt"):
                 require(required in files, f"missing deliverable in package: {required}")
             require(any(name.endswith("_test.mbt") for name in files), "missing public API tests in package")
             package.extractall(extracted)
@@ -101,7 +102,7 @@ def main() -> int:
         # --frozen means the isolated build uses only the already resolved cache.
         for command in ("check", "build", "test"):
             invoke([command, "--frozen", "--deny-warn", "--target", "all"], extracted)
-        for example in ("dependencies", "topology", "datasets", "analytics"):
+        for example in ("dependencies", "topology", "datasets", "analytics", "selection"):
             invoke(["run", f"examples/{example}", "--frozen", "--deny-warn", "--target", "native"], extracted)
         invoke(["run", "cmd/graphml", "--frozen", "--deny-warn", "--target", "native", "--",
                 "verify", "tests/fixtures/flat.graphml"], extracted)
@@ -121,7 +122,7 @@ def main() -> int:
                 "packaged subgraph CLI returned incorrect induced graph")
         report["passed"] = True
         RESULTS.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"PASS: {len(files)} report-free packaged files; isolated check/build/test, four examples and CLI adapters passed")
+        print(f"PASS: {len(files)} report-free packaged files; isolated check/build/test, five examples and CLI adapters passed")
         print(f"LOCAL ONLY: no publication attempted; evidence in {RESULTS}")
         return 0
     except Exception as error:
