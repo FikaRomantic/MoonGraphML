@@ -1,10 +1,11 @@
 ///|
 /// Directed arcs follow either source-to-target or target-to-source. Undirected
 /// edges always contribute both orientations, except a self-loop contributes one.
+#derive(Eq, @debug.Debug)
 pub(all) enum CsrOrientation {
   Outgoing
   Incoming
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend CsrOrientation with Eq::{equal, not_equal}
@@ -16,11 +17,12 @@ pub extend CsrOrientation with @debug.Debug::{to_repr}
 /// One stored adjacency entry. edge_index refers to the original FlatGraph edge
 /// order. reversed marks an arc emitted opposite to stored endpoint order;
 /// incoming directed self-loops are marked reversed even though endpoints agree.
+#derive(Eq, @debug.Debug)
 pub(all) struct CsrEntry {
   target : Int32
   edge_index : Int32
   reversed : Bool
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend CsrEntry with Eq::{equal, not_equal}

@@ -1,4 +1,5 @@
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) enum ValueType {
   Boolean
   Int32
@@ -6,7 +7,7 @@ pub(all) enum ValueType {
   Float32
   Float64
   StringValue
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend ValueType with Eq::{equal, not_equal}
@@ -15,6 +16,7 @@ pub extend ValueType with Eq::{equal, not_equal}
 pub extend ValueType with @debug.Debug::{to_repr}
 
 ///|
+#derive(@debug.Debug)
 pub(all) enum Scalar {
   BooleanValue(Bool)
   IntegerValue(Int32)
@@ -22,7 +24,7 @@ pub(all) enum Scalar {
   FloatValue(Float)
   DoubleValue(Double)
   TextValue(String)
-} derive(@debug.Debug)
+}
 
 ///|
 pub extend Scalar with @debug.Debug::{to_repr}

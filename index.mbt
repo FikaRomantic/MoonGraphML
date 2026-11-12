@@ -1,8 +1,9 @@
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) struct ElementAddress {
   graph : GraphAddress
   index : Int32
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend ElementAddress with Eq::{equal, not_equal}

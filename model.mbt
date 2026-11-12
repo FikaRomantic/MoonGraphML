@@ -1,8 +1,9 @@
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) enum Direction {
   Directed
   Undirected
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend Direction with Eq::{equal, not_equal}
@@ -32,11 +33,12 @@ pub fn Direction::name(self : Direction) -> String {
 }
 
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) enum EndpointKind {
   In
   Out
   Undir
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend EndpointKind with Eq::{equal, not_equal}

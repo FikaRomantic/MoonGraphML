@@ -1,4 +1,5 @@
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) enum Scope {
   All
   DocumentScope
@@ -8,7 +9,7 @@ pub(all) enum Scope {
   PortScope
   HyperedgeScope
   EndpointScope
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend Scope with Eq::{equal, not_equal}

@@ -37,10 +37,11 @@ pub fn CountHint::to_int64(self : CountHint) -> Int64? {
 }
 
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) enum IdHint {
   CanonicalIds
   FreeIds
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend IdHint with Eq::{equal, not_equal}
@@ -49,11 +50,12 @@ pub extend IdHint with Eq::{equal, not_equal}
 pub extend IdHint with @debug.Debug::{to_repr}
 
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) enum OrderHint {
   FreeOrder
   NodesFirst
   AdjacencyList
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend OrderHint with Eq::{equal, not_equal}

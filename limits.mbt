@@ -1,10 +1,11 @@
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) suberror GraphError {
   InvalidXml(String)
   InvalidGraph(path~ : String, reason~ : String)
   LimitExceeded(resource~ : String, limit~ : Int32)
   Unsupported(path~ : String, feature~ : String)
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend GraphError with Eq::{equal, not_equal}
@@ -13,6 +14,7 @@ pub extend GraphError with Eq::{equal, not_equal}
 pub extend GraphError with @debug.Debug::{to_repr}
 
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) struct Limits {
   input_bytes : Int32
   xml_depth : Int32
@@ -26,7 +28,7 @@ pub(all) struct Limits {
   ports : Int32
   endpoints : Int32
   output_bytes : Int32
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend Limits with Eq::{equal, not_equal}

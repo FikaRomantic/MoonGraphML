@@ -1,10 +1,11 @@
 ///|
 /// Each step names the owning element of a nested graph, by its ordinal in that graph.
+#derive(Eq, @debug.Debug)
 pub(all) enum GraphStep {
   NodeGraph(Int32)
   EdgeGraph(Int32)
   HyperedgeGraph(Int32)
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend GraphStep with Eq::{equal, not_equal}
@@ -13,10 +14,11 @@ pub extend GraphStep with Eq::{equal, not_equal}
 pub extend GraphStep with @debug.Debug::{to_repr}
 
 ///|
+#derive(Eq, @debug.Debug)
 pub(all) struct GraphAddress {
   root : Int32
   steps : Array[GraphStep]
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend GraphAddress with Eq::{equal, not_equal}

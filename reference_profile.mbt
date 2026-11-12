@@ -1,9 +1,10 @@
 ///|
 /// Reference tools emit some non-XSD scalar spellings; tolerance must be explicitly requested.
+#derive(Eq, @debug.Debug)
 pub(all) enum ReadProfile {
   Strict
   ReferenceLibraries
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend ReadProfile with Eq::{equal, not_equal}

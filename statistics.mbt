@@ -1,5 +1,6 @@
 ///|
 /// Counts describe stored structure, not inferred expansion of hyperedges or locators.
+#derive(Eq, @debug.Debug)
 pub(all) struct Statistics {
   keys : Int32
   graphs : Int32
@@ -15,7 +16,7 @@ pub(all) struct Statistics {
   has_self_loops : Bool
   has_locators : Bool
   has_xml_payloads : Bool
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 pub extend Statistics with Eq::{equal, not_equal}

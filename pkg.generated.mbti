@@ -15,12 +15,13 @@ pub fn parse(String, limits? : Limits, profile? : ReadProfile) -> Document raise
 pub fn serialize(Document, limits? : Limits) -> String raise GraphError
 
 // Errors
+#derive(Eq, @debug.Debug)
 pub(all) suberror GraphError {
   InvalidXml(String)
   InvalidGraph(path~ : String, reason~ : String)
   LimitExceeded(resource~ : String, limit~ : Int32)
   Unsupported(path~ : String, feature~ : String)
-} derive(Eq, @debug.Debug)
+}
 pub fn GraphError::equal(Self, Self) -> Bool
 pub fn GraphError::message(Self) -> String
 pub fn GraphError::not_equal(Self, Self) -> Bool
@@ -57,19 +58,21 @@ pub fn CsrAdjacency::node_index(Self, String) -> Int32?
 pub fn CsrAdjacency::reversed(Self) -> Array[Bool]
 pub fn CsrAdjacency::row(Self, Int32) -> Array[CsrEntry] raise GraphError
 
+#derive(Eq, @debug.Debug)
 pub(all) struct CsrEntry {
   target : Int32
   edge_index : Int32
   reversed : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn CsrEntry::equal(Self, Self) -> Bool
 pub fn CsrEntry::not_equal(Self, Self) -> Bool
 pub fn CsrEntry::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) enum CsrOrientation {
   Outgoing
   Incoming
-} derive(Eq, @debug.Debug)
+}
 pub fn CsrOrientation::equal(Self, Self) -> Bool
 pub fn CsrOrientation::not_equal(Self, Self) -> Bool
 pub fn CsrOrientation::to_repr(Self) -> @debug.Repr
@@ -93,10 +96,11 @@ pub(all) struct DegreeHints {
   out_degree : CountHint?
 }
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Direction {
   Directed
   Undirected
-} derive(Eq, @debug.Debug)
+}
 pub fn Direction::equal(Self, Self) -> Bool
 pub fn Direction::from_name(String) -> Self raise GraphError
 pub fn Direction::name(Self) -> String
@@ -158,10 +162,11 @@ pub(all) struct EdgeRow {
   attributes : Map[String, Scalar]
 }
 
+#derive(Eq, @debug.Debug)
 pub(all) struct ElementAddress {
   graph : GraphAddress
   index : Int32
-} derive(Eq, @debug.Debug)
+}
 pub fn ElementAddress::equal(Self, Self) -> Bool
 pub fn ElementAddress::not_equal(Self, Self) -> Bool
 pub fn ElementAddress::to_repr(Self) -> @debug.Repr
@@ -177,11 +182,12 @@ pub(all) struct Endpoint {
 }
 pub fn Endpoint::new(String, kind? : EndpointKind, port? : String, id? : String) -> Self
 
+#derive(Eq, @debug.Debug)
 pub(all) enum EndpointKind {
   In
   Out
   Undir
-} derive(Eq, @debug.Debug)
+}
 pub fn EndpointKind::equal(Self, Self) -> Bool
 pub fn EndpointKind::from_name(String) -> Self raise GraphError
 pub fn EndpointKind::name(Self) -> String
@@ -226,10 +232,11 @@ pub(all) struct Graph {
 pub fn Graph::new(Direction, id? : String, description? : String) -> Self
 pub fn Graph::parse_info(Self) -> ParseInfo raise GraphError
 
+#derive(Eq, @debug.Debug)
 pub(all) struct GraphAddress {
   root : Int32
   steps : Array[GraphStep]
-} derive(Eq, @debug.Debug)
+}
 pub fn GraphAddress::child(Self, GraphStep) -> Self
 pub fn GraphAddress::equal(Self, Self) -> Bool
 pub fn GraphAddress::not_equal(Self, Self) -> Bool
@@ -249,11 +256,12 @@ pub fn GraphIndex::new(Document) -> Self
 pub fn GraphIndex::node(Self, Int32, String) -> Node?
 pub fn GraphIndex::node_address(Self, Int32, String) -> ElementAddress?
 
+#derive(Eq, @debug.Debug)
 pub(all) enum GraphStep {
   NodeGraph(Int32)
   EdgeGraph(Int32)
   HyperedgeGraph(Int32)
-} derive(Eq, @debug.Debug)
+}
 pub fn GraphStep::equal(Self, Self) -> Bool
 pub fn GraphStep::not_equal(Self, Self) -> Bool
 pub fn GraphStep::to_repr(Self) -> @debug.Repr
@@ -269,10 +277,11 @@ pub(all) struct Hyperedge {
 }
 pub fn Hyperedge::new(id? : String, description? : String) -> Self
 
+#derive(Eq, @debug.Debug)
 pub(all) enum IdHint {
   CanonicalIds
   FreeIds
-} derive(Eq, @debug.Debug)
+}
 pub fn IdHint::equal(Self, Self) -> Bool
 pub fn IdHint::not_equal(Self, Self) -> Bool
 pub fn IdHint::to_repr(Self) -> @debug.Repr
@@ -298,6 +307,7 @@ pub(all) struct Key {
 }
 pub fn Key::new(String, Scope, ValueType, name? : String, default_value? : Scalar, description? : String) -> Self raise GraphError
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Limits {
   input_bytes : Int32
   xml_depth : Int32
@@ -311,7 +321,7 @@ pub(all) struct Limits {
   ports : Int32
   endpoints : Int32
   output_bytes : Int32
-} derive(Eq, @debug.Debug)
+}
 pub fn Limits::default() -> Self
 pub fn Limits::equal(Self, Self) -> Bool
 pub fn Limits::not_equal(Self, Self) -> Bool
@@ -355,11 +365,12 @@ pub(all) struct NodeRow {
   attributes : Map[String, Scalar]
 }
 
+#derive(Eq, @debug.Debug)
 pub(all) enum OrderHint {
   FreeOrder
   NodesFirst
   AdjacencyList
-} derive(Eq, @debug.Debug)
+}
 pub fn OrderHint::equal(Self, Self) -> Bool
 pub fn OrderHint::not_equal(Self, Self) -> Bool
 pub fn OrderHint::to_repr(Self) -> @debug.Repr
@@ -385,14 +396,16 @@ pub(all) struct Port {
 }
 pub fn Port::new(String, description? : String) -> Self
 
+#derive(Eq, @debug.Debug)
 pub(all) enum ReadProfile {
   Strict
   ReferenceLibraries
-} derive(Eq, @debug.Debug)
+}
 pub fn ReadProfile::equal(Self, Self) -> Bool
 pub fn ReadProfile::not_equal(Self, Self) -> Bool
 pub fn ReadProfile::to_repr(Self) -> @debug.Repr
 
+#derive(@debug.Debug)
 pub(all) enum Scalar {
   BooleanValue(Bool)
   IntegerValue(Int32)
@@ -400,13 +413,14 @@ pub(all) enum Scalar {
   FloatValue(Float)
   DoubleValue(Double)
   TextValue(String)
-} derive(@debug.Debug)
+}
 pub fn Scalar::equivalent(Self, Self) -> Bool
 pub fn Scalar::lexical(Self) -> String
 pub fn Scalar::parse(ValueType, String) -> Self raise GraphError
 pub fn Scalar::to_repr(Self) -> @debug.Repr
 pub fn Scalar::value_type(Self) -> ValueType
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Scope {
   All
   DocumentScope
@@ -416,7 +430,7 @@ pub(all) enum Scope {
   PortScope
   HyperedgeScope
   EndpointScope
-} derive(Eq, @debug.Debug)
+}
 pub fn Scope::applies_to(Self, Self) -> Bool
 pub fn Scope::equal(Self, Self) -> Bool
 pub fn Scope::from_name(String) -> Self raise GraphError
@@ -424,6 +438,7 @@ pub fn Scope::name(Self) -> String
 pub fn Scope::not_equal(Self, Self) -> Bool
 pub fn Scope::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Statistics {
   keys : Int32
   graphs : Int32
@@ -439,11 +454,12 @@ pub(all) struct Statistics {
   has_self_loops : Bool
   has_locators : Bool
   has_xml_payloads : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn Statistics::equal(Self, Self) -> Bool
 pub fn Statistics::not_equal(Self, Self) -> Bool
 pub fn Statistics::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) enum ValueType {
   Boolean
   Int32
@@ -451,7 +467,7 @@ pub(all) enum ValueType {
   Float32
   Float64
   StringValue
-} derive(Eq, @debug.Debug)
+}
 pub fn ValueType::equal(Self, Self) -> Bool
 pub fn ValueType::from_name(String) -> Self raise GraphError
 pub fn ValueType::name(Self) -> String
